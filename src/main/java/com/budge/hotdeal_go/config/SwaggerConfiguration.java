@@ -18,6 +18,7 @@ import springfox.documentation.spring.web.plugins.Docket;
 public class SwaggerConfiguration {
 
     // Swagger-UI 3.x 확인
+	// http://{public IPv4}/swagger-ui/index.html
 
     private final ServerProperties serverProperties;
 
