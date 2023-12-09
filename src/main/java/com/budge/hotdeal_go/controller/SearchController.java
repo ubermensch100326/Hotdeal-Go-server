@@ -30,7 +30,6 @@ public class SearchController {
     @GetMapping("/fmkorea")
     public ResponseEntity<List<HotDealDto>> doSearchFmkorea() throws SQLException {
         List<HotDealDto> fmKorea = getFmKorea();
-        List<HotDealDto> quasarZone = getQuasarZone();
 
         if (fmKorea.size() != 0) {
             return ResponseEntity.ok(fmKorea);
@@ -73,7 +72,10 @@ public class SearchController {
 
         try {
             // 해당 URL에서 HTML 가져오기
-            Document document = Jsoup.connect(url).get();
+            Document document = Jsoup.connect(url)
+                    .userAgent(
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0")
+                    .get();
 
             // 가져온 HTML에서 특정 요소(예: 글 제목) 추출
             Elements titles = document.select("h3.title > a");
