@@ -38,6 +38,8 @@ public class KakaoApi {
 
 			// 필수 쿼리 파라미터 세팅
 			sb.append("grant_type=authorization_code");
+			// 임시로 client api key 직접 넣어줌
+			// 추후에 바꾸면서 kakao에 있는 프로젝트 삭제할 것
 			sb.append("&client_id=").append("247fbba0160d9dbd31f7c1cf712806db");
 			sb.append("&redirect_uri=").append("http://localhost/oauth/kakao");
 			sb.append("&code=").append(code);
