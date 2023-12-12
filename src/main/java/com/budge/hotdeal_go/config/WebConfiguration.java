@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.view.InternalResourceViewResolver;
 
@@ -14,11 +15,11 @@ import com.budge.hotdeal_go.interceptor.JWTInterceptor;
 @EnableWebMvc
 public class WebConfiguration implements WebMvcConfigurer {
 
-    @Bean
-    public InternalResourceViewResolver defaultViewResolver() {
-        return new InternalResourceViewResolver();
-    }
-	
+	@Bean
+	public InternalResourceViewResolver defaultViewResolver() {
+		return new InternalResourceViewResolver();
+	}
+
 	private JWTInterceptor jwtInterceptor;
 
 	public WebConfiguration(JWTInterceptor jwtInterceptor) {
@@ -33,9 +34,7 @@ public class WebConfiguration implements WebMvcConfigurer {
 		// Allow "simple" methods GET, HEAD and POST.
 		// Allow all headers.
 		// Set max age to 1800 seconds (30 minutes).
-		registry
-				.addMapping("/**")
-				.allowedOrigins("*")
+		registry.addMapping("/**").allowedOrigins("*")
 				// .allowedOrigins("http://localhost:5173", "http://localhost:5174")
 				.allowedMethods(HttpMethod.GET.name(), HttpMethod.POST.name(), HttpMethod.PUT.name(),
 						HttpMethod.DELETE.name(), HttpMethod.HEAD.name(), HttpMethod.OPTIONS.name(),
@@ -46,10 +45,13 @@ public class WebConfiguration implements WebMvcConfigurer {
 				.maxAge(1800); // Pre-flight Caching
 	}
 
-	// @Override
-	// public void addInterceptors(InterceptorRegistry registry) {
-	// registry.addInterceptor(jwtInterceptor);
-	// }
+	@Override
+	public void addInterceptors(InterceptorRegistry registry) {
+		registry.addInterceptor(jwtInterceptor)
+				.addPathPatterns("/**")
+				.excludePathPatterns("/swagger-resources/**", "/swagger-ui/**", "/v3/api-docs", "/error")
+				.excludePathPatterns("/member/login", "/member/register", "/member/oauth/**");
+	}
 
 	// Swagger UI 실행시 404처리
 	// Swagger2 일경우

@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Slf4j
-public class JWTUtil {
+public class JWTUtility {
 
 	@Value("${jwt.salt}")
 	private String salt;
@@ -28,13 +28,13 @@ public class JWTUtil {
 	@Value("${jwt.refresh-token.expiretime}")
 	private long refreshTokenExpireTime;
 
-	public String createAccessToken(String userId) {
-		return create(userId, "access-token", accessTokenExpireTime);
+	public String createAccessToken(String memberId) {
+		return create(memberId, "access-token", accessTokenExpireTime);
 	}
 
-	// AccessToken에 비해 유효기간을 길게 설정.
-	public String createRefreshToken(String userId) {
-		return create(userId, "refresh-token", refreshTokenExpireTime);
+	// AccessToken에 비해 유효기간을 길게 설정
+	public String createRefreshToken(String memberId) {
+		return create(memberId, "refresh-token", refreshTokenExpireTime);
 	}
 
 	// Token 발급
@@ -43,30 +43,30 @@ public class JWTUtil {
 	// subject : payload에 sub의 value로 들어갈 subject값
 	// expire : 토큰 유효기간 설정을 위한 값
 	// jwt 토큰의 구성 : header + payload + signature
-	private String create(String userId, String subject, long expireTime) {
+	private String create(String memberId, String subject, long expireTime) {
 		// Payload 설정 : 생성일 (IssuedAt), 유효기간 (Expiration),
-		// 토큰 제목 (Subject), 데이터 (Claim) 등 정보 세팅.
+		// 토큰 제목 (Subject), 데이터 (Claim) 등 정보 세팅
 		Claims claims = Jwts.claims()
 				.setSubject(subject) // 토큰 제목 설정 ex) access-token, refresh-token
 				.setIssuedAt(new Date()) // 생성일 설정
 				.setExpiration(new Date(System.currentTimeMillis() + expireTime)); // 만료일 설정 (유효기간)
 
 		// 저장할 data의 key, value
-		claims.put("userId", userId);
+		claims.put("memberId", memberId);
 
 		String jwt = Jwts.builder()
-				.setHeaderParam("typ", "JWT").setClaims(claims) // Header 설정 : 토큰의 타입, 해쉬 알고리즘 정보 세팅.
-				.signWith(SignatureAlgorithm.HS256, this.generateKey()) // Signature 설정 : secret key를 활용한 암호화.
+				.setHeaderParam("typ", "JWT").setClaims(claims) // Header 설정 : 토큰의 타입, 해쉬 알고리즘 정보 세팅
+				.signWith(SignatureAlgorithm.HS256, this.generateKey()) // Signature 설정 : secret key를 활용한 암호화
 				.compact(); // 직렬화 처리.
 
 		return jwt;
 	}
 
-	// Signature 설정에 들어갈 key 생성.
+	// Signature 설정에 들어갈 key 생성
 	private byte[] generateKey() {
 		byte[] key = null;
 		try {
-			// charset 설정 안하면 사용자 플랫폼의 기본 인코딩 설정으로 인코딩 됨.
+			// charset 설정 안하면 사용자 플랫폼의 기본 인코딩 설정으로 인코딩 됨
 			key = salt.getBytes("UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			if (log.isInfoEnabled()) {
@@ -78,7 +78,7 @@ public class JWTUtil {
 		return key;
 	}
 
-	// 전달 받은 토큰이 제대로 생성된것인지 확인 하고 문제가 있다면 UnauthorizedException을 발생.
+	// 전달 받은 토큰이 제대로 생성된것인지 확인 하고 문제가 있다면 UnauthorizedException을 발생
 	public boolean checkToken(String token) {
 		try {
 			// Json Web Signature? 서버에서 인증을 근거로 인증정보를 서버의 private key로 서명 한것을 토큰화 한것
@@ -87,14 +87,23 @@ public class JWTUtil {
 			Jws<Claims> claims = Jwts.parser().setSigningKey(this.generateKey()).parseClaimsJws(token);
 			// Claims 는 Map의 구현체 형태
 			log.debug("claims: {}", claims);
-			return true;
+			Date expiration = claims.getBody().getExpiration();
+			Date now = new Date();
+			if (now.before(expiration)) {
+				log.info("Before Expiration => Access Success!!!");
+				return true;
+			}
+			else {
+				log.info("After Expiration => Access Fail!!!");
+				return false;
+			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			return false;
 		}
 	}
 
-	public String getUserId(String authorization) {
+	public String getMemberId(String authorization) {
 		Jws<Claims> claims = null;
 		try {
 			claims = Jwts.parser().setSigningKey(this.generateKey()).parseClaimsJws(authorization);
@@ -104,7 +113,7 @@ public class JWTUtil {
 		}
 		Map<String, Object> value = claims.getBody();
 		log.info("value : {}", value);
-		return (String) value.get("userId");
+		return (String) value.get("memberId");
 	}
 
 }

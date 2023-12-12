@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper
+	namespace="com.budge.hotdeal_go.model.mapper.MemberMapper">
+
+	<!-- 원래 필요한 정보만 가져오는 것이 맞지만 디버깅용으로 다 가져와봄 -->
+	<select id="findByProviderId" parameterType="MemberDto"
+		resultType="MemberDto">
+		select no, nickname, provider, provider_id, id, password,
+		contact_email, gender, age_range, birthday, register_time,
+		refresh_token
+		from member
+		where provider = #{provider}
+		and no =
+		#{no}
+	</select>
+
+	<insert id="registerMember" parameterType="MemberDto">
+		insert into member
+		(nickname, provider, provider_id, id, password,
+		contact_email,
+		gender,
+		age_range,
+		birthday)
+		values (#{nickname},
+		#{provider},
+		#{provider_id},
+		#{id},
+		#{password},
+		#{contact_email},
+		#{gender}, #{age_range}, #{birthday})
+		<selectKey resultType="int" keyProperty="no" order="AFTER">
+			select
+			last_insert_id()
+		</selectKey>
+	</insert>
+
+	<update id="saveRefreshToken" parameterType="map">
+		update member
+		set
+		refresh_token = #{refresh_token}
+		where no = #{no}
+	</update>
+
+	<select id="login" parameterType="map" resultType="MemberDto">
+		select no,
+		provider, refresh_token
+		from user
+		where id = #{id}
+		and password =
+		#{password}
+	</select>
+
+</mapper>
