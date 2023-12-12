@@ -3,6 +3,7 @@ package com.budge.hotdeal_go.model.service;
 import java.sql.SQLException;
 import java.util.List;
 
+import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
 
 import com.budge.hotdeal_go.model.dto.HotDealDto;
@@ -24,22 +25,32 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<HotDealDto> getFmkorea(int pgno, int npp) throws SQLException {
-        return searchMapper.getFmkorea(pgno, npp);
-    }
-
-    @Override
-    public List<HotDealDto> getQuasarZone(int pgno, int npp) throws SQLException {
-        return searchMapper.getQuasarZone(pgno, npp);
-    }
-
-    @Override
-    public List<HotDealDto> getRuliweb(int pgno, int npp) throws SQLException {
-        return searchMapper.getRuliweb(pgno, npp);
+    public List<HotDealDto> getHotDealInfoBySiteName(String siteName, int pgno, int npp) throws SQLException {
+        return searchMapper.getHotDealInfoBySiteName(siteName, pgno, npp);
     }
 
     @Override
     public List<HotDealDto> getList(String title) throws SQLException {
         return searchMapper.getList(title);
+    }
+
+    @Override
+    public List<HotDealDto> getListAll(int pgno, int npp) throws SQLException {
+        return searchMapper.getListAll(pgno, npp);
+    }
+
+    @Override
+    public List<HotDealDto> getListBySiteName(String title, String siteName, int pgno, int npp) throws SQLException {
+        return searchMapper.getListBySiteName(title, siteName, pgno, npp);
+    }
+
+    @Override
+    public List<HotDealDto> getTop3View() throws SQLException {
+        return searchMapper.getTop3View();
+    }
+
+    @Override
+    public List<HotDealDto> getTop3Like() throws SQLException {
+        return searchMapper.getTop3Like();
     }
 }

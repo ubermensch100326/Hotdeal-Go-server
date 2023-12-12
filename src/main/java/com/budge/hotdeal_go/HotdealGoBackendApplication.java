@@ -50,7 +50,7 @@ public class HotdealGoBackendApplication {
 
 		// 스케줄링: 주기 10분
 		// (서버 시작시 1분 지연 후 10분마다 카운팅하여 스스로 최신화)
-		scheduler.scheduleAtFixedRate(crawlingTask, 1, 10, TimeUnit.MINUTES);
+		scheduler.scheduleAtFixedRate(crawlingTask, 0, 15, TimeUnit.MINUTES);
 	}
 
 	private static void crawlAndSaveData() throws SQLException {
@@ -81,7 +81,7 @@ public class HotdealGoBackendApplication {
 			else
 				System.out.println("퀘이사존 실패");
 		}
-
+		// System.out.println(ruliweb);
 		if (ruliweb.size() == 0) {
 			System.out.println("[쓰레드] 루리웹에서 크롤링하지 못하였습니다.");
 		} else {
@@ -266,9 +266,9 @@ public class HotdealGoBackendApplication {
 				Matcher matcher = pattern.matcher(str);
 				if (matcher.find()) {
 					String title = str.replaceFirst("\\[([^\\]]+)\\]", "").trim();
-					if (title.equals("") || title == null)
+					if (title.equals("") || title == null) {
 						continue;
-
+					}
 					dto.setTitle(title);
 
 					String marketName = matcher.group(1);
@@ -291,7 +291,8 @@ public class HotdealGoBackendApplication {
 					dto.setTime(getTime);
 				}
 
-				list.add(dto);
+				if (dto.getTitle() != null)
+					list.add(dto);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

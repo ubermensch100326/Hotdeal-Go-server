@@ -36,16 +36,21 @@ public class DBConfiguration {
 		return new HikariDataSource(hikariConfig());
 	}
 
-	 @Bean
-	 public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws
-	 Exception {
-	 SqlSessionFactoryBean session = new SqlSessionFactoryBean();
-	 session.setDataSource(dataSource);
-	 session.setMapperLocations(applicationContext.getResources("classpath:mapper/**/*.xml"));
-	 session.setTypeAliasesPackage("com.budge.hotdeal_go.model");
-	 // session.setConfigLocation(new PathMatchingResourcePatternResolver().getResource("classpath:mybatis/mybatis-config.xml"));
-	 return session.getObject();
-	 }
+	@Bean
+	public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+		SqlSessionFactoryBean session = new SqlSessionFactoryBean();
+		session.setDataSource(dataSource);
+		session.setMapperLocations(applicationContext.getResources("classpath:mapper/**/*.xml"));
+		session.setTypeAliasesPackage("com.budge.hotdeal_go.model");
+
+		// 언더스코어를 카멜 케이스로 자동 변환
+		org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();
+		configuration.setMapUnderscoreToCamelCase(true);
+		session.setConfiguration(configuration);
+		// session.setConfigLocation(new
+		// PathMatchingResourcePatternResolver().getResource("classpath:mybatis/mybatis-config.xml"));
+		return session.getObject();
+	}
 
 	@Bean
 	public SqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory) {
