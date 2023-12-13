@@ -17,4 +17,6 @@ public interface MemberMapper {
 
 	MemberDto loginMember(MemberDto memberDto);
 
+	MemberDto findByMemberId(MemberDto memberDto);
+
 }

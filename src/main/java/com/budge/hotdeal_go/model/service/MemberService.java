@@ -14,4 +14,6 @@ public interface MemberService {
 
 	MemberDto loginMember(MemberDto memberDto);
 
+	MemberDto findByMemberId(MemberDto memberDto);
+
 }

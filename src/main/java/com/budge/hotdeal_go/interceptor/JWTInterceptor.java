@@ -66,12 +66,11 @@ public class JWTInterceptor implements HandlerInterceptor {
 		final String accessToken = request.getHeader(HEADER_AUTH);
 
 		if (accessToken != null && jwtUtility.checkToken(accessToken)) {
-			System.out.println(11111);
 			String memberId = jwtUtility.getMemberId(accessToken);
 			int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
 			String provider = memberId.replaceAll("[0-9]", "");
 			MemberDto memberDto = MemberDto.builder().no(no).provider(provider).build();
-			MemberDto memberFind = memberService.findByProviderId(memberDto);
+			MemberDto memberFind = memberService.findByMemberId(memberDto);
 			
 			if (memberFind != null) {
 				log.info("토큰 사용 가능 : {}", accessToken);

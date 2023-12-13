@@ -23,6 +23,11 @@ public class MemberServiceImpl implements MemberService {
 	public MemberDto findByProviderId(MemberDto memberDto) {
 		return memberMapper.findByProviderId(memberDto);
 	}
+	
+	@Override
+	public MemberDto findByMemberId(MemberDto memberDto) {
+		return memberMapper.findByMemberId(memberDto);
+	}
 
 	@Override
 	public void registerMember(MemberDto memberDto) {

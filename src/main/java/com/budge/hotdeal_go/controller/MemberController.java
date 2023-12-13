@@ -184,6 +184,7 @@ public class MemberController {
 		return new ResponseEntity<Map<String, Object>>(tokenMap, status);
 	}
 	
+//	계정 통합, 소셜 회원가입과 자체 회원가입 둘 다 하면 어떻게 처리할지 생각해볼 것
 //	나중에 REST하게 설계하려면 어떻게 수정해야될지 생각해볼 것
 //	일단은 입력되지 않은 정보는 empty string으로 채워지도록 설계함
 //	사이트 자체 회원가입은 이후에 별도로 로그인을 해야함 (소셜 로그인은 계속하기를 누르면 자동으로 회원가입 및 로그인 진행)
@@ -191,6 +192,7 @@ public class MemberController {
 	@PostMapping("/register")
 	public ResponseEntity<?> registerMember(@RequestBody @ApiParam(value = "회원 정보 (nickname, id, password, contact_email, gender(선택), age_range(선택), birthday(선택)", required = true) MemberDto memberDto) {
 		log.info("registerMember - {}", memberDto);
+		memberDto.setProvider("hotdealgo");
 		memberService.registerMember(memberDto);
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
