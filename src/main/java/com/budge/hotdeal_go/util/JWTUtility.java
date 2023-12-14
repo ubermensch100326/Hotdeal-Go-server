@@ -7,7 +7,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.budge.hotdeal_go.exception.UnAuthorizedException;
+import com.budge.hotdeal_go.exception.UnauthorizedException;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -79,7 +79,7 @@ public class JWTUtility {
 	}
 
 	// 전달 받은 토큰이 제대로 생성된것인지 확인 하고 문제가 있다면 UnauthorizedException을 발생
-	public boolean checkToken(String token) {
+	public int checkToken(String token) {
 		try {
 			// Json Web Signature? 서버에서 인증을 근거로 인증정보를 서버의 private key로 서명 한것을 토큰화 한것
 			// setSigningKey : JWS 서명 검증을 위한 secret key 세팅
@@ -91,15 +91,15 @@ public class JWTUtility {
 			Date now = new Date();
 			if (now.before(expiration)) {
 				log.info("Before Expiration => Access Success!!!");
-				return true;
+				return 2;
 			}
 			else {
 				log.info("After Expiration => Access Fail!!!");
-				return false;
+				return 1;
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
-			return false;
+			return 0;
 		}
 	}
 
@@ -109,7 +109,7 @@ public class JWTUtility {
 			claims = Jwts.parser().setSigningKey(this.generateKey()).parseClaimsJws(authorization);
 		} catch (Exception e) {
 			log.error(e.getMessage());
-			throw new UnAuthorizedException();
+			throw new UnauthorizedException();
 		}
 		Map<String, Object> value = claims.getBody();
 		log.info("value : {}", value);

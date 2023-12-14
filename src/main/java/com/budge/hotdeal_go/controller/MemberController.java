@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,7 +27,12 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 
+// 로그인 외에도 /refresh가 구현되어 있어야 함 (액세스 토큰 재발급)
+// 로그아웃할 때 백에서 리프레시 토큰을 삭제하고, 프론트에서는 저장된 액세스 토큰과 리프레시 토큰을 삭제해야 함 (클라이언트가 로그아웃 요청을 할 때는 헤더에 액세스 토큰, 바디에 리프레시 토큰 담아서 하게 됨)
+// 나중에 유효성 검증 부분도 구현할 것 (@Valid, BindingResult, hasErrors() => new ResponseEntity(HttpStatus.BAD_REQUEST))
+// passwordEncoder.match 이용해서 비밀번호 암호화
 @RestController
+@Validated
 @RequestMapping("/member")
 @Api("멤버 컨트롤러 API V1")
 @Slf4j
