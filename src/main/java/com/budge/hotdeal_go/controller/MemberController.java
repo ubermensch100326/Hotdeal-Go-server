@@ -141,13 +141,16 @@ public class MemberController {
 				memberFind = memberDto;
 			}
 
-//			발급받은 refresh token을 DB에 저장
-			String accessToken = jwtUtility
-					.createAccessToken(String.valueOf(memberFind.getNo()) + memberFind.getProvider());
-			String refreshToken = jwtUtility
-					.createRefreshToken(String.valueOf(memberFind.getNo()) + memberFind.getProvider());
+			String memberId = String.valueOf(memberFind.getNo()) + memberFind.getProvider();
+			String nickname = memberFind.getNickname();
+			int admin = memberFind.getAdmin();
+
+			String accessToken = jwtUtility.createAccessToken(memberId);
+			String refreshToken = jwtUtility.createRefreshToken(memberId);
 			log.info("access token : {}", accessToken);
 			log.info("refresh token : {}", refreshToken);
+			
+//			발급받은 refresh token을 DB에 저장
 			Map<String, Object> saveMap = new HashMap<>();
 			saveMap.put("no", memberFind.getNo());
 			saveMap.put("refresh_token", refreshToken);
@@ -156,6 +159,9 @@ public class MemberController {
 //			JSON으로 token 전달
 			responseMap.put("accessToken", accessToken);
 			responseMap.put("refreshToken", refreshToken);
+			responseMap.put("memberId", memberId);
+			responseMap.put("nickname", nickname);
+			responseMap.put("admin", admin);
 			status = HttpStatus.CREATED;
 
 		} catch (Exception e) {
@@ -178,6 +184,7 @@ public class MemberController {
 			if (memberLogin != null) {
 				String memberId = String.valueOf(memberLogin.getNo()) + memberLogin.getProvider();
 				String nickname = memberLogin.getNickname();
+				int admin = memberLogin.getAdmin();
 				String accessToken = jwtUtility.createAccessToken(memberId);
 				String refreshToken = jwtUtility.createRefreshToken(memberId);
 				log.debug("access token : {}", accessToken);
@@ -194,6 +201,7 @@ public class MemberController {
 				responseMap.put("refreshToken", refreshToken);
 				responseMap.put("memberId", memberId);
 				responseMap.put("nickname", nickname);
+				responseMap.put("admin", admin);
 				status = HttpStatus.CREATED;
 			} else {
 				responseMap.put("message", "아이디 또는 패스워드 확인 필요");
@@ -240,7 +248,8 @@ public class MemberController {
 //			액세스 토큰 재발급은 로그인에서와 달리 memberId로 회원을 식별하지 않고 refreshToken 자체로 함
 			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
 			if (memberFind != null) {
-				String accessToken = jwtUtility.createAccessToken(String.valueOf(memberFind.getNo()) + memberFind.getProvider());
+				String accessToken = jwtUtility
+						.createAccessToken(String.valueOf(memberFind.getNo()) + memberFind.getProvider());
 				responseMap.put("accessToken", accessToken);
 				responseMap.put("refreshToken", refreshToken);
 				status = HttpStatus.CREATED;
@@ -261,7 +270,7 @@ public class MemberController {
 
 		return new ResponseEntity<Map<String, Object>>(responseMap, status);
 	}
-	
+
 	@ApiOperation(value = "로그아웃", notes = "DB에서 리프레시 토큰 삭제 (클라이언트 측에서는 액세스 토큰과 리프레시 토큰 삭제)", response = Map.class)
 	@PostMapping("/logout")
 	public ResponseEntity<?> logoutMember(HttpServletRequest request) {
@@ -273,7 +282,7 @@ public class MemberController {
 		int flag = 0;
 		HttpStatus status = HttpStatus.ACCEPTED;
 		Map<String, Object> responseMap = new HashMap<String, Object>();
-		
+
 //		checkToken 값이 1일 때이든 (만료된 토큰) 2일 때이든 DB에서 삭제하도록 함
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
 			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
@@ -294,7 +303,7 @@ public class MemberController {
 
 		return new ResponseEntity<Map<String, Object>>(responseMap, status);
 	}
-	
+
 	@ApiOperation(value = "회원탈퇴", notes = "DB에서 회원 정보 삭제", response = Map.class)
 	@DeleteMapping("/withdraw")
 	public ResponseEntity<?> withdrawMember(HttpServletRequest request) {
@@ -306,7 +315,7 @@ public class MemberController {
 		int flag = 0;
 		HttpStatus status = HttpStatus.ACCEPTED;
 		Map<String, Object> responseMap = new HashMap<String, Object>();
-		
+
 //		checkToken 값이 1일 때이든 (만료된 토큰) 2일 때이든 DB에서 삭제하도록 함
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
 			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);

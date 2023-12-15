@@ -10,7 +10,7 @@
 		resultType="MemberDto">
 		select no, nickname, provider, provider_id, id, password,
 		contact_email, gender, age_range, birthday, register_time,
-		refresh_token
+		refresh_token, admin
 		from member
 		where provider = #{provider}
 		and no =
@@ -21,7 +21,7 @@
 		resultType="MemberDto">
 		select no, nickname, provider, provider_id, id, password,
 		contact_email, gender, age_range, birthday, register_time,
-		refresh_token
+		refresh_token, admin
 		from member
 		where provider = #{provider}
 		and provider_id =
@@ -57,7 +57,7 @@
 
 	<select id="loginMember" parameterType="map"
 		resultType="MemberDto">
-		select no, nickname,
+		select no, nickname, admin,
 		provider, refresh_token
 		from member
 		where id =
