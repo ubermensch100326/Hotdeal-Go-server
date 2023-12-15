@@ -19,4 +19,10 @@ public interface MemberMapper {
 
 	MemberDto findByMemberId(MemberDto memberDto);
 
+	MemberDto checkRefreshToken(String refreshToken);
+
+	void logoutMember(String refreshToken);
+
+	void withdrawMember(String refreshToken);
+
 }

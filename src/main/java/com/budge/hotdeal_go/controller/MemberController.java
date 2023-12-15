@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -221,7 +222,6 @@ public class MemberController {
 		return ResponseEntity.status(HttpStatus.CREATED).build();
 	}
 
-	// 리프레시 토큰
 	// @RequestHeader 어떻게 쓰는지 모르겠음 (우선은 HttpServletReqeust 사용)
 	@ApiOperation(value = "액세스 토큰 재발급", notes = "리프레시 토큰을 이용하여 액세스 토큰 재발급", response = Map.class)
 	@GetMapping("/token")
@@ -237,14 +237,10 @@ public class MemberController {
 //	    만약 토큰에 memberId라는 정보를 담지 않고 인증 처리를 하고 싶다면 다른 방법을 생각해봐야될 듯
 		Map<String, Object> responseMap = new HashMap<String, Object>();
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
-			String memberId = jwtUtility.getMemberId(refreshToken);
-			int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
-			String provider = memberId.replaceAll("[0-9]", "");
-			MemberDto memberDto = MemberDto.builder().no(no).provider(provider).build();
-			MemberDto memberFind = memberService.findByMemberId(memberDto);
-
+//			액세스 토큰 재발급은 로그인에서와 달리 memberId로 회원을 식별하지 않고 refreshToken 자체로 함
+			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
 			if (memberFind != null) {
-				String accessToken = jwtUtility.createAccessToken(memberId);
+				String accessToken = jwtUtility.createAccessToken(String.valueOf(memberFind.getNo()) + memberFind.getProvider());
 				responseMap.put("accessToken", accessToken);
 				responseMap.put("refreshToken", refreshToken);
 				status = HttpStatus.CREATED;
@@ -257,6 +253,72 @@ public class MemberController {
 			log.info("토큰 만료 : {}", refreshToken);
 			// 401 에러
 			throw new TokenExpiredException();
+		} else {
+			log.info("토큰 형식 오류 : {}", refreshToken);
+			// 401 에러
+			throw new InvalidTokenFormatException();
+		}
+
+		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+	}
+	
+	@ApiOperation(value = "로그아웃", notes = "DB에서 리프레시 토큰 삭제 (클라이언트 측에서는 액세스 토큰과 리프레시 토큰 삭제)", response = Map.class)
+	@PostMapping("/logout")
+	public ResponseEntity<?> logoutMember(HttpServletRequest request) {
+		String authorization = request.getHeader("Authorization");
+		if (!authorization.startsWith("Bearer ")) {
+			throw new InvalidTokenFormatException();
+		}
+		String refreshToken = authorization.replace("Bearer ", "");
+		int flag = 0;
+		HttpStatus status = HttpStatus.ACCEPTED;
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		
+//		checkToken 값이 1일 때이든 (만료된 토큰) 2일 때이든 DB에서 삭제하도록 함
+		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
+			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
+			if (memberFind != null) {
+				memberService.logoutMember(refreshToken);
+				responseMap.put("message", "로그아웃 완료");
+				status = HttpStatus.OK;
+			} else {
+				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
+				// 404 에러
+				throw new MemberNotFoundException();
+			}
+		} else {
+			log.info("토큰 형식 오류 : {}", refreshToken);
+			// 401 에러
+			throw new InvalidTokenFormatException();
+		}
+
+		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+	}
+	
+	@ApiOperation(value = "회원탈퇴", notes = "DB에서 회원 정보 삭제", response = Map.class)
+	@DeleteMapping("/withdraw")
+	public ResponseEntity<?> withdrawMember(HttpServletRequest request) {
+		String authorization = request.getHeader("Authorization");
+		if (!authorization.startsWith("Bearer ")) {
+			throw new InvalidTokenFormatException();
+		}
+		String refreshToken = authorization.replace("Bearer ", "");
+		int flag = 0;
+		HttpStatus status = HttpStatus.ACCEPTED;
+		Map<String, Object> responseMap = new HashMap<String, Object>();
+		
+//		checkToken 값이 1일 때이든 (만료된 토큰) 2일 때이든 DB에서 삭제하도록 함
+		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
+			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
+			if (memberFind != null) {
+				memberService.withdrawMember(refreshToken);
+				responseMap.put("message", "회원탈퇴 완료");
+				status = HttpStatus.OK;
+			} else {
+				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
+				// 404 에러
+				throw new MemberNotFoundException();
+			}
 		} else {
 			log.info("토큰 형식 오류 : {}", refreshToken);
 			// 401 에러

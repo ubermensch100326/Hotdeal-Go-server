@@ -24,7 +24,8 @@
 		refresh_token
 		from member
 		where provider = #{provider}
-		and provider_id = #{provider_id}
+		and provider_id =
+		#{provider_id}
 	</select>
 
 	<insert id="registerMember" parameterType="MemberDto">
@@ -64,5 +65,25 @@
 		and password =
 		#{password}
 	</select>
+
+	<select id="checkRefreshToken" parameterType="string"
+		resultType="MemberDto">
+		select no, nickname,
+		provider, refresh_token
+		from member
+		where refresh_token = #{refreshToken}
+	</select>
+
+	<update id="logoutMember" parameterType="string">
+		update member
+		set
+		refresh_token = NULL
+		where refresh_token = #{refreshToken}
+	</update>
+
+	<delete id="withdrawMember" parameterType="string">
+		delete from member
+		where refresh_token = #{refreshToken}
+	</delete>
 
 </mapper>

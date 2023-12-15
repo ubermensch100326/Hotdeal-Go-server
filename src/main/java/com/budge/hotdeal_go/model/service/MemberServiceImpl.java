@@ -44,4 +44,19 @@ public class MemberServiceImpl implements MemberService {
 		return memberMapper.loginMember(memberDto);
 	}
 
+	@Override
+	public MemberDto checkRefreshToken(String refreshToken) {
+		return memberMapper.checkRefreshToken(refreshToken);
+	}
+
+	@Override
+	public void logoutMember(String refreshToken) {
+		memberMapper.logoutMember(refreshToken);
+	}
+
+	@Override
+	public void withdrawMember(String refreshToken) {
+		memberMapper.withdrawMember(refreshToken);
+	}
+
 }
