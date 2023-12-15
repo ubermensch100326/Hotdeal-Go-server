@@ -56,7 +56,7 @@
 
 	<select id="loginMember" parameterType="map"
 		resultType="MemberDto">
-		select no,
+		select no, nickname,
 		provider, refresh_token
 		from member
 		where id =

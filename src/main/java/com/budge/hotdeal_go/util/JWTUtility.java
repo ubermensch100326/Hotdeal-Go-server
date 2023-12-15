@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import com.budge.hotdeal_go.exception.UnauthorizedException;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -79,7 +80,7 @@ public class JWTUtility {
 	}
 
 	// 전달 받은 토큰이 제대로 생성된것인지 확인 하고 문제가 있다면 UnauthorizedException을 발생
-	public int checkToken(String token) {
+	public int checkToken(String token, String type) {
 		try {
 			// Json Web Signature? 서버에서 인증을 근거로 인증정보를 서버의 private key로 서명 한것을 토큰화 한것
 			// setSigningKey : JWS 서명 검증을 위한 secret key 세팅
@@ -87,26 +88,38 @@ public class JWTUtility {
 			Jws<Claims> claims = Jwts.parser().setSigningKey(this.generateKey()).parseClaimsJws(token);
 			// Claims 는 Map의 구현체 형태
 			log.debug("claims: {}", claims);
-			Date expiration = claims.getBody().getExpiration();
-			Date now = new Date();
-			if (now.before(expiration)) {
-				log.info("Before Expiration => Access Success!!!");
+//			Date expiration = claims.getBody().getExpiration();
+//			Date now = new Date();
+//			if (now.before(expiration)) {
+//				log.info("Before Expiration => Access Success!!!");
+//				return 2;
+//			}
+//			else {
+//				log.info("After Expiration => Access Fail!!!");
+//				return 1;
+//			}
+			Map<String, Object> value = claims.getBody();
+			log.info("value : {}", value);
+			String sub = (String) value.get("sub");
+			if (type.equals(sub)) {
 				return 2;
 			}
 			else {
-				log.info("After Expiration => Access Fail!!!");
-				return 1;
+				return 0;
 			}
-		} catch (Exception e) {
-			log.error(e.getMessage());
+		} catch (ExpiredJwtException ex) {
+			log.error(ex.getMessage());
+			return 1;
+		} catch (Exception ex) {
+			log.error(ex.getMessage());
 			return 0;
 		}
 	}
 
-	public String getMemberId(String authorization) {
+	public String getMemberId(String token) {
 		Jws<Claims> claims = null;
 		try {
-			claims = Jwts.parser().setSigningKey(this.generateKey()).parseClaimsJws(authorization);
+			claims = Jwts.parser().setSigningKey(this.generateKey()).parseClaimsJws(token);
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			throw new UnauthorizedException();
