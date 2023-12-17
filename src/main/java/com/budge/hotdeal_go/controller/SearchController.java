@@ -105,16 +105,6 @@ public class SearchController {
         return ResponseEntity.ok(list);
     }
 
-    // @ApiOperation(value = "조회수 Top3 게시글 반환", notes = "전체 커뮤니티에서 조회수가 높은 3개의 게시글을
-    // 반환한다.", response = List.class)
-    // @GetMapping("/top3")
-    // public ResponseEntity<List<HotDealDto>> doGetTop3View() {
-    // List<HotDealDto> list = new ArrayList<>();
-    // list = searchService.getTop3View();
-
-    // return ResponseEntity.ok(list);
-    // }
-
     @ApiOperation(value = "좋아요 Top3 게시글 반환", notes = "전체 커뮤니티에서 좋아요가 높은 3개의 게시글을 반환한다.", response = List.class)
     @GetMapping("/like/top3")
     public ResponseEntity<List<HotDealDto>> doGetTop3Like() throws SQLException {

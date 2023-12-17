@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Ignore Firebase configuration file
+hotdeal-server-firebase-adminsdk-7lweh-df7d0cbbd1.json
