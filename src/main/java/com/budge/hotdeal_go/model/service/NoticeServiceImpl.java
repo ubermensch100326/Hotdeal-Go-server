@@ -7,7 +7,8 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.budge.hotdeal_go.model.dto.NoticeDto;
+import com.budge.hotdeal_go.model.dto.ModifyNoticeDto;
+import com.budge.hotdeal_go.model.dto.NoticeDetailDto;
 import com.budge.hotdeal_go.model.dto.NoticeListDto;
 import com.budge.hotdeal_go.model.dto.NoticeParamDto;
 import com.budge.hotdeal_go.model.mapper.NoticeMapper;
@@ -32,7 +33,7 @@ public class NoticeServiceImpl implements NoticeService {
 		int start = currentPage * noticePerPage - noticePerPage;
 		param.put("start", start);
 		param.put("size", noticePerPage);
-		List<NoticeDto> list = noticeMapper.getNoticeList(param);
+		List<NoticeDetailDto> list = noticeMapper.getNoticeList(param);
 		
 		int totalNoticeCount = noticeMapper.getTotalNoticeCount(param);
 		int totalPageCount = (totalNoticeCount - 1) / noticePerPage + 1;
@@ -43,6 +44,31 @@ public class NoticeServiceImpl implements NoticeService {
 		noticeListDto.setTotalPageCount(totalPageCount);
 		
 		return noticeListDto;
+	}
+
+	@Override
+	public void writeNotice(NoticeDetailDto noticeDetailDto) {
+		noticeMapper.writeNotice(noticeDetailDto);
+	}
+
+	@Override
+	public NoticeDetailDto getNoticeDetail(int noticeNo) {
+		return noticeMapper.getNoticeDetail(noticeNo);
+	}
+
+	@Override
+	public void updateHit(int noticeNo) {
+		noticeMapper.updateHit(noticeNo);
+	}
+
+	@Override
+	public void modifyNoticeDetail(ModifyNoticeDto modifyNoticeDto) {
+		noticeMapper.modifyNoticeDetail(modifyNoticeDto);
+	}
+
+	@Override
+	public void deleteNoticeDetail(int noticeNo) {
+		noticeMapper.deleteNoticeDetail(noticeNo);
 	}
 	
 }
