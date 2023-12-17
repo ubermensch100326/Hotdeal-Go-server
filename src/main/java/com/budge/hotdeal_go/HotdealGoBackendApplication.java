@@ -139,7 +139,7 @@ public class HotdealGoBackendApplication {
 				dto.setShippingFee(shippingFees.get(i).selectFirst("a").text());
 				dto.setPurchasingPlace(purchasingPlaces.get(i).selectFirst("a").text());
 				dto.setTime(year + "-" + month + "-" + day + " " + times.get(i).text());
-				dto.setImg(lis.get(i).select("img.thumb").attr("data-original"));
+				dto.setImg("https:" + lis.get(i).select("img.thumb").attr("data-original"));
 
 				if (lis.get(i).select("a.pc_voted_count").text().equals("")) {
 					dto.setLikeCnt(Long.parseLong("0"));
