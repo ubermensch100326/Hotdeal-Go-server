@@ -68,9 +68,13 @@ public class JWTInterceptor implements HandlerInterceptor {
         System.out.println("=======================================================");
 		
         // 헤더에 있는 액세스 토큰 정보 확인
-		final String accessToken = request.getHeader(HEADER_AUTH);
+		String authorization = request.getHeader(HEADER_AUTH);
+		if (!authorization.startsWith("Bearer ")) {
+			throw new InvalidTokenFormatException();
+		}
+		String accessToken = authorization.replace("Bearer ", "");
 		int flag = 0;
-		if (accessToken != null && (flag = jwtUtility.checkToken(accessToken)) != 0) {
+		if (accessToken != null && (flag = jwtUtility.checkToken(accessToken, "access-token")) != 0) {
 			if (flag == 2) {
 				String memberId = jwtUtility.getMemberId(accessToken);
 				int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
@@ -86,8 +90,7 @@ public class JWTInterceptor implements HandlerInterceptor {
 					// 404 에러
 					throw new MemberNotFoundException();
 				}
-			}
-			else {
+			} else {
 				log.info("토큰 만료 : {}", accessToken);
 				// 401 에러
 				throw new TokenExpiredException();
@@ -95,7 +98,7 @@ public class JWTInterceptor implements HandlerInterceptor {
 
 		} else {
 			log.info("토큰 형식 오류 : {}", accessToken);
-			// 400 에러
+			// 401 에러
 			throw new InvalidTokenFormatException();
 		}
 	}

@@ -5,6 +5,6 @@ public class InvalidTokenFormatException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	public InvalidTokenFormatException() {
-		super("Unauthorized : Invalid token format");
+		super("올바르지 않은 토큰 형식");
 	}
 }

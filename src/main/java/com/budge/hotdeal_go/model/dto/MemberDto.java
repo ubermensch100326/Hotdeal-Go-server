@@ -43,4 +43,6 @@ public class MemberDto {
 	private String register_time;
 	@ApiModelProperty(value = "리프레시 토큰")
 	private String refresh_token;
+	@ApiModelProperty(value = "관리자 여부 (0/1)")
+	private int admin;
 }
