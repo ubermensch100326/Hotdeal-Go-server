@@ -10,11 +10,12 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.budge.hotdeal_go.exception.InvalidTokenFormatException;
 import com.budge.hotdeal_go.exception.MemberNotFoundException;
+import com.budge.hotdeal_go.exception.NoticeException;
 import com.budge.hotdeal_go.exception.TokenExpiredException;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler({MemberNotFoundException.class, TokenExpiredException.class, InvalidTokenFormatException.class})
+    @ExceptionHandler({MemberNotFoundException.class, TokenExpiredException.class, InvalidTokenFormatException.class, NoticeException.class})
     public ResponseEntity<Map<String, Object>> handleCustomExceptions(Exception ex) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
 		Map<String, Object> responseMap = new HashMap<String, Object>();
@@ -29,7 +30,7 @@ public class GlobalExceptionHandler {
         	status = HttpStatus.UNAUTHORIZED;
             responseMap.put("message", ex.getMessage());
         } else {
-        	responseMap.put("message", "서버 내부 오류");
+        	responseMap.put("message", ex.getMessage());
         }
 
 		return new ResponseEntity<Map<String, Object>>(responseMap, status);

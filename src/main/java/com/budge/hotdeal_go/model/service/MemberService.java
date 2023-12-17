@@ -2,6 +2,7 @@ package com.budge.hotdeal_go.model.service;
 
 import java.util.Map;
 
+import com.budge.hotdeal_go.model.dto.LoginDto;
 import com.budge.hotdeal_go.model.dto.MemberDto;
 
 public interface MemberService {
@@ -12,7 +13,7 @@ public interface MemberService {
 
 	void saveRefreshToken(Map<String, Object> saveMap);
 
-	MemberDto loginMember(MemberDto memberDto);
+	MemberDto loginMember(LoginDto loginDto);
 
 	MemberDto findByMemberId(MemberDto memberDto);
 

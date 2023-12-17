@@ -5,6 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.budge.hotdeal_go.model.dto.LoginDto;
 import com.budge.hotdeal_go.model.dto.MemberDto;
 import com.budge.hotdeal_go.model.mapper.MemberMapper;
 
@@ -40,8 +41,8 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public MemberDto loginMember(MemberDto memberDto) {
-		return memberMapper.loginMember(memberDto);
+	public MemberDto loginMember(LoginDto loginDto) {
+		return memberMapper.loginMember(loginDto);
 	}
 
 	@Override

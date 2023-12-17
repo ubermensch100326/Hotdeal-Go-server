@@ -11,7 +11,7 @@ import com.budge.hotdeal_go.model.dto.NoticeDto;
 @Mapper
 public interface NoticeMapper {
 
-	List<NoticeDto> listNotice(Map<String, Object> param) throws SQLException;	
+	List<NoticeDto> getNoticeList(Map<String, Object> param) throws SQLException;	
 	
 	int getTotalNoticeCount(Map<String, Object> param) throws SQLException;
 }

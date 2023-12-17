@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
 
+import com.budge.hotdeal_go.model.dto.LoginDto;
 import com.budge.hotdeal_go.model.dto.MemberDto;
 
 @Mapper
@@ -15,7 +16,7 @@ public interface MemberMapper {
 
 	void saveRefreshToken(Map<String, Object> saveMap);
 
-	MemberDto loginMember(MemberDto memberDto);
+	MemberDto loginMember(LoginDto loginDto);
 
 	MemberDto findByMemberId(MemberDto memberDto);
 
@@ -24,5 +25,5 @@ public interface MemberMapper {
 	void logoutMember(String refreshToken);
 
 	void withdrawMember(String refreshToken);
-
+	
 }

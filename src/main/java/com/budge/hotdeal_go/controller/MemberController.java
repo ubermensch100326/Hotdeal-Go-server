@@ -21,13 +21,15 @@ import com.budge.hotdeal_go.api.KakaoApi;
 import com.budge.hotdeal_go.exception.InvalidTokenFormatException;
 import com.budge.hotdeal_go.exception.MemberNotFoundException;
 import com.budge.hotdeal_go.exception.TokenExpiredException;
+import com.budge.hotdeal_go.model.dto.LoginDto;
 import com.budge.hotdeal_go.model.dto.MemberDto;
+import com.budge.hotdeal_go.model.dto.MessageDto;
+import com.budge.hotdeal_go.model.dto.RegisterDto;
+import com.budge.hotdeal_go.model.dto.TokenDto;
 import com.budge.hotdeal_go.model.service.MemberService;
 import com.budge.hotdeal_go.util.JWTUtility;
 
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
@@ -55,10 +57,10 @@ public class MemberController {
 		this.jwtUtility = jwtUtility;
 	}
 
-	@ApiOperation(value = "웹 소셜로그인 (테스트용) - Deprecated", notes = "카카오 인증 (인가) 코드를 이용하여 회원가입 혹은 로그인 처리")
+	@ApiOperation(value = "웹 소셜로그인 (테스트용) - Deprecated", notes = "카카오 인증 (인가) 코드를 이용하여 회원가입 혹은 로그인 처리", response = TokenDto.class)
 //	REST API로 구현할 때 바로 액세스 토큰을 받는 것이 아니라 인증 코드를 받아서, 인증 코드를 이용하여 액세스 토큰을 받게 됨
 	@GetMapping("/oauth/kakao/test")
-	public ResponseEntity<Map<String, Object>> continueWithKakaoTest(
+	public ResponseEntity<TokenDto> continueWithKakaoTest(
 			@RequestParam @ApiParam(value = "카카오 인증 코드", required = true) String code) {
 //		카카오로부터 사용자 인증
 		log.info("kakao authorization code : {}", code);
@@ -90,12 +92,14 @@ public class MemberController {
 		memberService.saveRefreshToken(saveMap);
 
 //		JSON으로 token 전달
-		Map<String, Object> responseMap = new HashMap<>();
-		responseMap.put("accessToken", accessToken);
-		responseMap.put("refreshToken", refreshToken);
+		TokenDto tokenDto = TokenDto.builder()
+				.message("소셜 로그인 완료")
+				.accessToken(accessToken)
+				.refreshToken(refreshToken)
+				.build();
 		HttpStatus status = HttpStatus.CREATED;
 
-		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+		return new ResponseEntity<TokenDto>(tokenDto, status);
 	}
 
 //	Android SDK에서 보내준 액세스 토큰을 이용하여 회원가입, 로그인
@@ -110,16 +114,17 @@ public class MemberController {
 //		- 가입되어 있지 않으면 새로 가입시키고 JWT 발급
 //		- 이미 가입되어 있다면 ? 
 
-	@ApiOperation(value = "안드로이드 소셜로그인", notes = "카카오 액세스 토큰을 이용하여 회원가입 혹은 로그인 처리")
+	@ApiOperation(value = "안드로이드 소셜로그인", notes = "카카오 액세스 토큰을 이용하여 회원가입 혹은 로그인 처리", response = TokenDto.class)
 	@GetMapping("/oauth/kakao")
-	public ResponseEntity<Map<String, Object>> continueWithKakao(
-			@RequestParam @ApiParam(value = "카카오 리프레시 토큰", required = true) String authorization) {
-		if (!authorization.startsWith("Bearer ")) {
+	public ResponseEntity<TokenDto> continueWithKakao(HttpServletRequest request) {
+		String authorization = request.getHeader("Authorization");
+		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
 		}
 		String kakaoAccessToken = authorization.replace("Bearer ", "");
+		
 		log.info("kakao access token : {}", kakaoAccessToken);
-		Map<String, Object> responseMap = new HashMap<>();
+		TokenDto tokenDto = null;
 		HttpStatus status = HttpStatus.ACCEPTED;
 
 		try {
@@ -157,34 +162,36 @@ public class MemberController {
 			memberService.saveRefreshToken(saveMap);
 
 //			JSON으로 token 전달
-			responseMap.put("accessToken", accessToken);
-			responseMap.put("refreshToken", refreshToken);
-			responseMap.put("memberId", memberId);
-			responseMap.put("nickname", nickname);
-			responseMap.put("admin", admin);
+			tokenDto = TokenDto.builder()
+					.message("안드로이드 소셜 로그인 완료")
+					.accessToken(accessToken)
+					.refreshToken(refreshToken)
+					.build();
 			status = HttpStatus.CREATED;
 
 		} catch (Exception e) {
 			log.debug("OAuth 처리 중 오류 발생 : {}", e);
-			responseMap.put("message", e.getMessage());
+			tokenDto = TokenDto.builder()
+					.message(e.getMessage())
+					.build();
 			status = HttpStatus.INTERNAL_SERVER_ERROR;
 		}
-		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+		return new ResponseEntity<TokenDto>(tokenDto, status);
 	}
 
-	@ApiOperation(value = "사이트 자체 아이디, 비밀번호를 이용한 로그인", notes = "아이디와 비밀번호를 이용하여 로그인 처리")
+	@ApiOperation(value = "사이트 자체 아이디, 비밀번호를 이용한 로그인", notes = "아이디와 비밀번호를 이용하여 로그인 처리", response = TokenDto.class)
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, Object>> loginMember(
-			@RequestBody @ApiParam(value = "로그인 시 필요한 회원정보(아이디, 비밀번호)", required = true) MemberDto memberDto) {
-		log.debug("login member : {}", memberDto);
-		Map<String, Object> responseMap = new HashMap<String, Object>();
+	public ResponseEntity<TokenDto> loginMember(
+			@RequestBody @ApiParam(value = "로그인 시 필요한 회원정보(아이디, 비밀번호)", required = true) LoginDto loginDto) {
+		log.debug("login member : {}", loginDto);
 		HttpStatus status = HttpStatus.ACCEPTED;
+		TokenDto tokenDto = null;
 		try {
-			MemberDto memberLogin = memberService.loginMember(memberDto);
+			MemberDto memberLogin = memberService.loginMember(loginDto);
 			if (memberLogin != null) {
 				String memberId = String.valueOf(memberLogin.getNo()) + memberLogin.getProvider();
-				String nickname = memberLogin.getNickname();
-				int admin = memberLogin.getAdmin();
+//				String nickname = memberLogin.getNickname();
+//				int admin = memberLogin.getAdmin();
 				String accessToken = jwtUtility.createAccessToken(memberId);
 				String refreshToken = jwtUtility.createRefreshToken(memberId);
 				log.debug("access token : {}", accessToken);
@@ -197,45 +204,73 @@ public class MemberController {
 				memberService.saveRefreshToken(saveMap);
 
 //				JSON으로 token 전달
-				responseMap.put("accessToken", accessToken);
-				responseMap.put("refreshToken", refreshToken);
-				responseMap.put("memberId", memberId);
-				responseMap.put("nickname", nickname);
-				responseMap.put("admin", admin);
+				tokenDto = TokenDto.builder()
+						.message("로그인 완료")
+						.accessToken(accessToken)
+						.refreshToken(refreshToken)
+						.build();
+//				tokenMap.put("memberId", memberId);
+//				tokenMap.put("nickname", nickname);
+//				tokenMap.put("admin", admin);
 				status = HttpStatus.CREATED;
 			} else {
-				responseMap.put("message", "아이디 또는 패스워드 확인 필요");
+				tokenDto = TokenDto.builder()
+						.message("아이디 또는 패스워드 확인 필요")
+						.build();
 				status = HttpStatus.UNAUTHORIZED;
 			}
 
 		} catch (Exception e) {
 			log.debug("로그인 처리 중 오류 발생 : {}", e);
-			responseMap.put("message", e.getMessage());
+			tokenDto = TokenDto.builder()
+					.message(e.getMessage())
+					.build();
 			status = HttpStatus.INTERNAL_SERVER_ERROR;
 		}
-		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+		return new ResponseEntity<TokenDto>(tokenDto, status);
 	}
 
 //	계정 통합, 소셜 회원가입과 자체 회원가입 둘 다 하면 어떻게 처리할지 생각해볼 것
 //	나중에 REST하게 설계하려면 어떻게 수정해야될지 생각해볼 것
 //	일단은 입력되지 않은 정보는 empty string으로 채워지도록 설계함
 //	사이트 자체 회원가입은 이후에 별도로 로그인을 해야함 (소셜 로그인은 계속하기를 누르면 자동으로 회원가입 및 로그인 진행)
-	@ApiOperation(value = "사이트 자체 회원가입", notes = "회원 정보를 입력하여 회원가입")
+	@ApiOperation(value = "사이트 자체 회원가입", notes = "회원 정보를 입력하여 회원가입", response = MessageDto.class)
 	@PostMapping("/register")
-	public ResponseEntity<?> registerMember(
-			@RequestBody @ApiParam(value = "회원 정보 (nickname, id, password, contact_email, gender(선택), age_range(선택), birthday(선택)", required = true) MemberDto memberDto) {
-		log.info("registerMember - {}", memberDto);
-		memberDto.setProvider("hotdealgo");
-		memberService.registerMember(memberDto);
-		return ResponseEntity.status(HttpStatus.CREATED).build();
+	public ResponseEntity<MessageDto> registerMember(
+			@RequestBody @ApiParam(value = "회원 정보 (nickname, id, password, contact_email, gender(선택), age_range(선택), birthday(선택)", required = true) RegisterDto registerDto) {
+		log.info("registerMember - {}", registerDto);
+		MemberDto memberDto = MemberDto.builder()
+				.nickname(registerDto.getNickname())
+				.id(registerDto.getId())
+				.password(registerDto.getPassword())
+				.contactEmail(registerDto.getContactEmail())
+				.gender(registerDto.getGender() != "" ? registerDto.getGender() : null)
+				.ageRange(registerDto.getAgeRange() != "" ? registerDto.getAgeRange() : null)
+				.birthday(registerDto.getBirthday() != "" ? registerDto.getBirthday() : null)
+				.provider("hotdealgo")
+				.build();
+		HttpStatus status = HttpStatus.ACCEPTED;
+		MessageDto messageDto = null;
+		try {
+			memberService.registerMember(memberDto);
+			messageDto = MessageDto.builder()
+					.message("회원가입 완료")
+					.build();
+			status = HttpStatus.CREATED;
+		} catch (Exception e) {
+			messageDto = MessageDto.builder()
+					.message("회원가입 실패")
+					.build();
+		}
+		return new ResponseEntity<MessageDto>(messageDto, status);
 	}
 
 	// @RequestHeader 어떻게 쓰는지 모르겠음 (우선은 HttpServletReqeust 사용)
-	@ApiOperation(value = "액세스 토큰 재발급", notes = "리프레시 토큰을 이용하여 액세스 토큰 재발급", response = Map.class)
+	@ApiOperation(value = "액세스 토큰 재발급", notes = "리프레시 토큰을 이용하여 액세스 토큰 재발급", response = TokenDto.class)
 	@GetMapping("/token")
-	public ResponseEntity<?> reissueAccessToken(HttpServletRequest request) {
+	public ResponseEntity<TokenDto> reissueAccessToken(HttpServletRequest request) {
 		String authorization = request.getHeader("Authorization");
-		if (!authorization.startsWith("Bearer ")) {
+		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
 		}
 		String refreshToken = authorization.replace("Bearer ", "");
@@ -243,15 +278,19 @@ public class MemberController {
 		HttpStatus status = HttpStatus.ACCEPTED;
 //	    토큰에 memberId라는 정보가 있다는 전제 하에 처리하는 방식임
 //	    만약 토큰에 memberId라는 정보를 담지 않고 인증 처리를 하고 싶다면 다른 방법을 생각해봐야될 듯
-		Map<String, Object> responseMap = new HashMap<String, Object>();
+		TokenDto tokenDto = null;
+		
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
 //			액세스 토큰 재발급은 로그인에서와 달리 memberId로 회원을 식별하지 않고 refreshToken 자체로 함
 			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
 			if (memberFind != null) {
 				String accessToken = jwtUtility
 						.createAccessToken(String.valueOf(memberFind.getNo()) + memberFind.getProvider());
-				responseMap.put("accessToken", accessToken);
-				responseMap.put("refreshToken", refreshToken);
+				tokenDto = TokenDto.builder()
+						.message("액세스 토큰 재발급 완료")
+						.accessToken(accessToken)
+						.refreshToken(refreshToken)
+						.build();
 				status = HttpStatus.CREATED;
 			} else {
 				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
@@ -268,73 +307,130 @@ public class MemberController {
 			throw new InvalidTokenFormatException();
 		}
 
-		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+		return new ResponseEntity<TokenDto>(tokenDto, status);
 	}
 
-	@ApiOperation(value = "로그아웃", notes = "DB에서 리프레시 토큰 삭제 (클라이언트 측에서는 액세스 토큰과 리프레시 토큰 삭제)", response = Map.class)
+	@ApiOperation(value = "로그아웃", notes = "DB에서 리프레시 토큰 삭제 (클라이언트 측에서는 액세스 토큰과 리프레시 토큰 삭제)", response = MessageDto.class)
 	@PostMapping("/logout")
-	public ResponseEntity<?> logoutMember(HttpServletRequest request) {
+	public ResponseEntity<MessageDto> logoutMember(HttpServletRequest request) {
 		String authorization = request.getHeader("Authorization");
-		if (!authorization.startsWith("Bearer ")) {
+		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
 		}
 		String refreshToken = authorization.replace("Bearer ", "");
 		int flag = 0;
 		HttpStatus status = HttpStatus.ACCEPTED;
-		Map<String, Object> responseMap = new HashMap<String, Object>();
+		MessageDto messageDto = null;
 
-//		checkToken 값이 1일 때이든 (만료된 토큰) 2일 때이든 DB에서 삭제하도록 함
+//		로그아웃이나 회원가입할 때 리프레시 토큰을 이용하는지 액세스 토큰을 이용하는지 알아볼 것
+//		다중 기기에서 로그인할 경우 토큰 테이블이 별도로 필요할 것으로 보임
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
 			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
 			if (memberFind != null) {
 				memberService.logoutMember(refreshToken);
-				responseMap.put("message", "로그아웃 완료");
+				messageDto = MessageDto.builder()
+						.message("로그아웃 완료")
+						.build();
 				status = HttpStatus.OK;
 			} else {
 				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
 				// 404 에러
 				throw new MemberNotFoundException();
 			}
+		} else if (flag == 1) {
+			log.info("토큰 만료 : {}", refreshToken);
+			// 401 에러
+			throw new TokenExpiredException();
 		} else {
 			log.info("토큰 형식 오류 : {}", refreshToken);
 			// 401 에러
 			throw new InvalidTokenFormatException();
 		}
 
-		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+		return new ResponseEntity<MessageDto>(messageDto, status);
 	}
 
-	@ApiOperation(value = "회원탈퇴", notes = "DB에서 회원 정보 삭제", response = Map.class)
+//	중복된 코드 제거하도록 인터셉터 활용할 것
+	@ApiOperation(value = "회원탈퇴", notes = "DB에서 회원 정보 삭제", response = MessageDto.class)
 	@DeleteMapping("/withdraw")
-	public ResponseEntity<?> withdrawMember(HttpServletRequest request) {
+	public ResponseEntity<MessageDto> withdrawMember(HttpServletRequest request) {
 		String authorization = request.getHeader("Authorization");
-		if (!authorization.startsWith("Bearer ")) {
+		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
 		}
 		String refreshToken = authorization.replace("Bearer ", "");
 		int flag = 0;
 		HttpStatus status = HttpStatus.ACCEPTED;
-		Map<String, Object> responseMap = new HashMap<String, Object>();
-
-//		checkToken 값이 1일 때이든 (만료된 토큰) 2일 때이든 DB에서 삭제하도록 함
+		MessageDto messageDto = null;
+		
+//		checkToken 값이 2일 때만 (만료되지 않은 토큰) DB에서 삭제하도록 함
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
+//			여기서 이중으로 DB 왔다갔다하지 않아도 되게 수정할 것
 			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
 			if (memberFind != null) {
 				memberService.withdrawMember(refreshToken);
-				responseMap.put("message", "회원탈퇴 완료");
+				messageDto = MessageDto.builder()
+						.message("회원탈퇴 완료")
+						.build();
 				status = HttpStatus.OK;
 			} else {
 				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
 				// 404 에러
 				throw new MemberNotFoundException();
 			}
+		} else if (flag == 1) {
+			log.info("토큰 만료 : {}", refreshToken);
+			// 401 에러
+			throw new TokenExpiredException();
 		} else {
 			log.info("토큰 형식 오류 : {}", refreshToken);
 			// 401 에러
 			throw new InvalidTokenFormatException();
 		}
 
-		return new ResponseEntity<Map<String, Object>>(responseMap, status);
+		return new ResponseEntity<MessageDto>(messageDto, status);
+	}
+	
+	@ApiOperation(value = "회원정보", notes = "DB에서 회원 정보 꺼내 반환", response = MemberDto.class)
+	@GetMapping("/info")
+	public ResponseEntity<MemberDto> getMemberInfo(HttpServletRequest request) {
+		String authorization = request.getHeader("Authorization");
+		if (authorization == null || !authorization.startsWith("Bearer ")) {
+			throw new InvalidTokenFormatException();
+		}
+		String accessToken = authorization.replace("Bearer ", "");
+		int flag = 0;
+		HttpStatus status = HttpStatus.ACCEPTED;
+		MemberDto memberDto = null;
+		MemberDto memberFind = null;
+		
+		if ((flag = jwtUtility.checkToken(accessToken, "access-token")) == 2) {
+			
+			String memberId = jwtUtility.getMemberId(accessToken);
+			int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
+			String provider = memberId.replaceAll("[0-9]", "");
+			memberDto = MemberDto.builder().no(no).provider(provider).build();
+			System.out.println(memberDto);
+			memberFind = memberService.findByMemberId(memberDto);
+			System.out.println(memberFind);
+			if (memberFind != null) {
+				log.info("토큰 사용 가능 : {}", accessToken);
+			} else {
+				log.info("회원 목록에 사용자 부재 : {}", accessToken);
+				// 404 에러
+				throw new MemberNotFoundException();
+			}
+		} else if (flag == 1) {
+			log.info("토큰 만료 : {}", accessToken);
+			// 401 에러
+			throw new TokenExpiredException();
+		} else {
+			log.info("토큰 형식 오류 : {}", accessToken);
+			// 401 에러
+			throw new InvalidTokenFormatException();
+		}
+
+		return new ResponseEntity<MemberDto>(memberFind, status);
 	}
 
 }

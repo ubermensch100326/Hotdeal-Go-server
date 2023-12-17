@@ -69,33 +69,30 @@ public class JWTInterceptor implements HandlerInterceptor {
 		
         // 헤더에 있는 액세스 토큰 정보 확인
 		String authorization = request.getHeader(HEADER_AUTH);
-		if (!authorization.startsWith("Bearer ")) {
+		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
 		}
 		String accessToken = authorization.replace("Bearer ", "");
 		int flag = 0;
-		if (accessToken != null && (flag = jwtUtility.checkToken(accessToken, "access-token")) != 0) {
-			if (flag == 2) {
-				String memberId = jwtUtility.getMemberId(accessToken);
-				int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
-				String provider = memberId.replaceAll("[0-9]", "");
-				MemberDto memberDto = MemberDto.builder().no(no).provider(provider).build();
-				MemberDto memberFind = memberService.findByMemberId(memberDto);
-				
-				if (memberFind != null) {
-					log.info("토큰 사용 가능 : {}", accessToken);
-					return true;
-				} else {
-					log.info("회원 목록에 사용자 부재 : {}", accessToken);
-					// 404 에러
-					throw new MemberNotFoundException();
-				}
+		if ((flag = jwtUtility.checkToken(accessToken, "access-token")) == 2) {
+			String memberId = jwtUtility.getMemberId(accessToken);
+			int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
+			String provider = memberId.replaceAll("[0-9]", "");
+			MemberDto memberDto = MemberDto.builder().no(no).provider(provider).build();
+			MemberDto memberFind = memberService.findByMemberId(memberDto);
+			
+			if (memberFind != null) {
+				log.info("토큰 사용 가능 : {}", accessToken);
+				return true;
 			} else {
-				log.info("토큰 만료 : {}", accessToken);
-				// 401 에러
-				throw new TokenExpiredException();
+				log.info("회원 목록에 사용자 부재 : {}", accessToken);
+				// 404 에러
+				throw new MemberNotFoundException();
 			}
-
+		} else if (flag == 1) {
+			log.info("토큰 만료 : {}", accessToken);
+			// 401 에러
+			throw new TokenExpiredException();
 		} else {
 			log.info("토큰 형식 오류 : {}", accessToken);
 			// 401 에러

@@ -86,7 +86,7 @@ public class KakaoApi {
 	public MemberDto getMemberInfo(String accessToken) {
 //		Map<String, Object> userInfo = new HashMap<>();
 		String requestUrl = "https://kapi.kakao.com/v2/user/me";
-		MemberDto memberDto = new MemberDto();
+		MemberDto memberDto = null;
 
 		try {
 			URL url = new URL(requestUrl);
@@ -128,10 +128,10 @@ public class KakaoApi {
 			memberDto = MemberDto.builder()
 				    .nickname(properties.getAsJsonObject().get("nickname").getAsString())
 				    .provider("kakao")
-				    .provider_id(id)
-				    .contact_email(kakaoAccount.getAsJsonObject().get("email").getAsString())
+				    .providerId(id)
+				    .contactEmail(kakaoAccount.getAsJsonObject().get("email").getAsString())
 				    .gender(kakaoAccount.getAsJsonObject().has("gender") ? kakaoAccount.getAsJsonObject().get("gender").getAsString() : null)
-				    .age_range(kakaoAccount.getAsJsonObject().has("age_range") ? kakaoAccount.getAsJsonObject().get("age_range").getAsString() : null)
+				    .ageRange(kakaoAccount.getAsJsonObject().has("age_range") ? kakaoAccount.getAsJsonObject().get("age_range").getAsString() : null)
 				    .birthday(kakaoAccount.getAsJsonObject().has("birthday") ? kakaoAccount.getAsJsonObject().get("birthday").getAsString() : null)
 				    .build();
 

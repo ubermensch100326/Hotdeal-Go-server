@@ -5,36 +5,25 @@
 <mapper
 	namespace="com.budge.hotdeal_go.model.mapper.NoticeMapper">
 
-	<resultMap type="noticeDto" id="notice">
-		<result column="notice_no" property="noticeNo" />
-		<result column="user_id" property="userId" />
-		<result column="name" property="userName" />
-		<result column="title" property="title" />
-		<result column="content" property="content" />
-		<result column="hit" property="hit" />
-		<result column="register_time" property="registerTime" />
-		<!-- modify_time도 넣으면 좋을 듯함 -->
-	</resultMap>
-
 	<sql id="search">
 		<if test="keyword != null and keyword != ''">
 			and title like concat('%', #{keyword}, '%')
 		</if>
 	</sql>
 
-	<select id="listNotice" parameterType="map" resultMap="notice">
-		select n.notice_no, n.user_id, n.title, n.content, n.hit,
-		n.register_time
-		from notice n
+	<select id="getNoticeList" parameterType="map" resultType="NoticeDto">
+		select no, title, content, hit,
+		register_time, member_no
+		from notice
 		where 1=1
 		<include refid="search"></include>
-		order by n.notice_no desc
+		order by no desc
 		limit #{start}, #{size}
 	</select>
 
 	<select id="getTotalNoticeCount" parameterType="map"
 		resultType="int">
-		select count(notice_no)
+		select count(no)
 		from notice
 		where 1=1
 		<include refid="search"></include>

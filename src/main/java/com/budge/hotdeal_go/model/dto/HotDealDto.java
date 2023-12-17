@@ -1,7 +1,9 @@
 package com.budge.hotdeal_go.model.dto;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@NoArgsConstructor
 @Data
 public class HotDealDto {
     private String title;

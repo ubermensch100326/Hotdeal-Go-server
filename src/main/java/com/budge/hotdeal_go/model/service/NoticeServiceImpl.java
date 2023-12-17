@@ -24,7 +24,7 @@ public class NoticeServiceImpl implements NoticeService {
 	}
 	
 	@Override
-	public NoticeListDto listNotice(NoticeParamDto noticeParamDto) throws Exception {
+	public NoticeListDto getNoticeList(NoticeParamDto noticeParamDto) throws Exception {
 		Map<String, Object> param = new HashMap<String, Object>();
 		param.put("keyword", noticeParamDto.getKeyword());
 		int currentPage = noticeParamDto.getPgno();
@@ -32,7 +32,7 @@ public class NoticeServiceImpl implements NoticeService {
 		int start = currentPage * noticePerPage - noticePerPage;
 		param.put("start", start);
 		param.put("size", noticePerPage);
-		List<NoticeDto> list = noticeMapper.listNotice(param);
+		List<NoticeDto> list = noticeMapper.getNoticeList(param);
 		
 		int totalNoticeCount = noticeMapper.getTotalNoticeCount(param);
 		int totalPageCount = (totalNoticeCount - 1) / noticePerPage + 1;

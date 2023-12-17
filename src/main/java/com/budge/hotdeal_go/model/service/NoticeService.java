@@ -5,5 +5,5 @@ import com.budge.hotdeal_go.model.dto.NoticeParamDto;
 
 public interface NoticeService {
 
-	NoticeListDto listNotice(NoticeParamDto noticeParamDto) throws Exception;
+	NoticeListDto getNoticeList(NoticeParamDto noticeParamDto) throws Exception;
 }
