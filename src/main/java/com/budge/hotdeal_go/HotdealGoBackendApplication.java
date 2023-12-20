@@ -20,6 +20,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.budge.hotdeal_go.model.dto.HotDealDto;
+import com.budge.hotdeal_go.model.dto.KeywordDto;
+import com.budge.hotdeal_go.model.service.FCMService;
 import com.budge.hotdeal_go.model.service.SearchService;
 
 @SpringBootApplication
@@ -27,10 +29,16 @@ public class HotdealGoBackendApplication {
 
 	private static SearchService searchService;
 
+	private static FCMService fcmService;
+
+	private static List<HotDealDto> tmpList;
+	private static List<KeywordDto> keywordList;
+
 	@Autowired
-	public HotdealGoBackendApplication(SearchService searchService) {
+	public HotdealGoBackendApplication(SearchService searchService, FCMService fcmService) {
 		super();
 		HotdealGoBackendApplication.searchService = searchService;
+		HotdealGoBackendApplication.fcmService = fcmService;
 	}
 
 	public static void main(String[] args) {
@@ -43,6 +51,7 @@ public class HotdealGoBackendApplication {
 			// DB 최신화 작업
 			try {
 				crawlAndSaveData();
+				checkNotiService();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -50,7 +59,7 @@ public class HotdealGoBackendApplication {
 
 		// 스케줄링: 주기 10분
 		// (서버 시작시 1분 지연 후 10분마다 카운팅하여 스스로 최신화)
-		scheduler.scheduleAtFixedRate(crawlingTask, 0, 15, TimeUnit.MINUTES);
+		// scheduler.scheduleAtFixedRate(crawlingTask, 0, 15, TimeUnit.MINUTES);
 	}
 
 	private static void crawlAndSaveData() throws SQLException {
@@ -92,8 +101,86 @@ public class HotdealGoBackendApplication {
 			else
 				System.out.println("루리웹 실패");
 		}
+
+		tmpList = new ArrayList<>();
+		tmpList.addAll(fmKorea);
+		tmpList.addAll(quasarZone);
+		tmpList.addAll(ruliweb);
 	}
 
+	private static void checkNotiService() throws SQLException {
+		keywordList = fcmService.getKeywordAll();
+		
+		for (HotDealDto HDto : tmpList) {
+			String text = HDto.getTitle();
+			
+			for (KeywordDto kDto : keywordList) {
+				
+			}
+		}
+	}
+	
+	// KMP (1)
+	public static boolean isSubstring(String pattern, String text) {
+        // 공백을 제거하고 비교
+        String patternWithoutSpaces = pattern.replaceAll("\\s", "");
+        String textWithoutSpaces = text.replaceAll("\\s", "");
+
+        int m = patternWithoutSpaces.length();
+        int n = textWithoutSpaces.length();
+
+        int[] lps = computeLPSArray(patternWithoutSpaces);
+
+        int i = 0;
+        int j = 0;
+
+        while (i < n) {
+            if (patternWithoutSpaces.charAt(j) == textWithoutSpaces.charAt(i)) {
+                j++;
+                i++;
+            }
+
+			// 패턴이 존재하면
+            if (j == m) {
+                return true;
+            } else if (i < n && patternWithoutSpaces.charAt(j) != textWithoutSpaces.charAt(i)) {
+                if (j != 0) {
+                    j = lps[j - 1];
+                } else {
+                    i++;
+                }
+            }
+        }
+
+		// 패턴이 존재하지 않으면
+        return false;
+    }
+
+	// KMP (2)
+    private static int[] computeLPSArray(String pattern) {
+        int m = pattern.length();
+        int[] lps = new int[m];
+        int len = 0;
+        int i = 1;
+
+        while (i < m) {
+            if (pattern.charAt(i) == pattern.charAt(len)) {
+                len++;
+                lps[i] = len;
+                i++;
+            } else {
+                if (len != 0) {
+                    len = lps[len - 1];
+                } else {
+                    lps[i] = 0;
+                    i++;
+                }
+            }
+        }
+
+        return lps;
+    }
+	
 	public static List<HotDealDto> getFmKorea() {
 		List<HotDealDto> list = new ArrayList<>();
 

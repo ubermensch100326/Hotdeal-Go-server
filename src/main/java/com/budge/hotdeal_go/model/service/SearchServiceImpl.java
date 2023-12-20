@@ -1,7 +1,9 @@
 package com.budge.hotdeal_go.model.service;
 
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Service;
@@ -25,8 +27,12 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<HotDealDto> getHotDealInfoBySiteName(String siteName, int pgno, int npp) throws SQLException {
-        return searchMapper.getHotDealInfoBySiteName(siteName, pgno, npp);
+    public List<HotDealDto> getHotDealInfoBySiteName(int pgno, int npp, List<String> siteNames) throws SQLException {
+        Map<String, Object> parameter = new HashMap<>();
+        parameter.put("pgno", pgno);
+        parameter.put("npp", npp);
+        parameter.put("siteNames", siteNames);
+        return searchMapper.getHotDealInfoBySiteName(parameter);
     }
 
     @Override
@@ -40,8 +46,14 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public List<HotDealDto> getListBySiteName(String title, String siteName, int pgno, int npp) throws SQLException {
-        return searchMapper.getListBySiteName(title, siteName, pgno, npp);
+    public List<HotDealDto> getListBySiteName(String title, List<String> siteNames, int pgno, int npp)
+            throws SQLException {
+        Map<String, Object> parameter = new HashMap<>();
+        parameter.put("title", title);
+        parameter.put("siteNames", siteNames);
+        parameter.put("pgno", pgno);
+        parameter.put("npp", npp);
+        return searchMapper.getListBySiteName(parameter);
     }
 
     @Override
