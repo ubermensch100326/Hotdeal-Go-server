@@ -34,25 +34,8 @@ public class SearchController {
         this.searchService = searchService;
     }
 
-    @ApiOperation(value = "핫딜 크롤링 정보 반환", notes = "해당 커뮤니티에서 핫딜 정보를 리스트로 반환한다.", response = List.class)
-    @GetMapping("/info")
-    public ResponseEntity<List<HotDealDto>> doSearchFmkorea(
-            @RequestParam(required = false, defaultValue = "0") @ApiParam(value = "검색할 사이트 이름(default=0, 에펨코리아=1, 퀘이사존=2, 루리웹=3)") String siteno,
-            @RequestParam(required = false, defaultValue = "1") @ApiParam(value = "현재 페이지 번호(defualt=1)") int pgno,
-            @RequestParam(required = false, defaultValue = "50") @ApiParam(value = "페이지당 글의 수(default=50)") int npp)
-            throws SQLException {
-
-        if (siteno.contains("0")) {
-            return ResponseEntity.ok(searchService.getListAll(pgno, npp));
-        }
-
-        List<HotDealDto> list = getList(siteno, pgno, npp);
-
-        return ResponseEntity.ok(list);
-    }
-
     @ApiOperation(value = "핫딜 정보 검색", notes = "게시글 제목 기준으로 데이터를 반환합니다.", response = List.class)
-    @GetMapping("/{title}")
+    @GetMapping("/info")
     public ResponseEntity<List<HotDealDto>> doSearchForTheHotDealInfo(
             @ApiParam(value = "얻어올 글의 제목", required = false, defaultValue = "") String title,
             @RequestParam(required = false, defaultValue = "0") @ApiParam(value = "검색할 사이트 이름(default=0, 에펨코리아=1, 퀘이사존=2, 루리웹=3)") String siteno,
