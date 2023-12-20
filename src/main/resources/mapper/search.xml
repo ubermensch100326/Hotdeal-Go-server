@@ -4,26 +4,38 @@
 <mapper
     namespace="com.budge.hotdeal_go.model.mapper.SearchMapper">
 
-    <insert id="regist" parameterType="java.util.List"> INSERT INTO hotdeal_info (TITLE, PRICE,
-        SHIPPING_FEE, PURCHASING_PLACE, URL, LIKE_CNT, TIME, IMG) VALUES <foreach collection="list"
-            item="item" separator=","> (#{item.title}, #{item.price}, #{item.shippingFee},
-        #{item.purchasingPlace}, #{item.url}, #{item.likeCnt}, #{item.time}, #{item.img}) </foreach>
-        ON DUPLICATE KEY UPDATE TITLE = VALUES(TITLE), URL = VALUES(URL); </insert>
+    <insert id="regist" parameterType="java.util.List"> 
+        INSERT INTO hotdeal_info (TITLE, PRICE,SHIPPING_FEE, PURCHASING_PLACE, URL, LIKE_CNT, TIME, IMG) VALUES 
+        <foreach collection="list" item="item" separator=","> 
+            (#{item.title}, #{item.price}, #{item.shippingFee}, #{item.purchasingPlace}, #{item.url}, #{item.likeCnt}, #{item.time}, #{item.img}) 
+        </foreach> 
+        ON DUPLICATE KEY UPDATE TITLE = VALUES(TITLE), URL = VALUES(URL); 
+    </insert>
 
-    <select id="getHotDealInfoBySiteName" parameterType="map" resultType="HotDealDto"> SELECT * FROM
-        hotdeal_info WHERE URL LIKE concat('%', #{siteName}, '%') ORDER BY TIME DESC limit #{pgno},
-        #{npp}</select>
+    <select id="getHotDealInfoBySiteName" parameterType="map" resultType="HotDealDto">
+        <foreach collection="siteNames" item="siteName" separator=" UNION ">
+            (SELECT * FROM hotdeal_info WHERE URL LIKE concat('%', #{siteName}, '%'))
+        </foreach>
+        ORDER BY TIME DESC LIMIT #{pgno}, #{npp}
+    </select>
+    
 
-    <select id="getList" parameterType="String" resultType="HotDealDto"> SELECT * FROM hotdeal_info
-        WHERE TITLE LIKE concat('%', #{title}, '%') ORDER BY TIME DESC</select>
+    <select id="getList" parameterType="String" resultType="HotDealDto"> 
+        SELECT * FROM hotdeal_info WHERE TITLE LIKE concat('%', #{title}, '%') ORDER BY TIME DESC
+    </select>
 
-    <select id="getListBySiteName" parameterType="map" resultType="HotDealDto"> SELECT * FROM
-        hotdeal_info WHERE TITLE LIKE concat('%', #{title}, '%') AND URL LIKE concat('%',
-        #{siteName}, '%') ORDER BY TIME DESC limit #{pgno}, #{npp} </select>
+    <select id="getListBySiteName" parameterType="map" resultType="HotDealDto"> 
+        <foreach collection="siteNames" item="siteName" separator=" UNION ">
+            (SELECT * FROM hotdeal_info WHERE TITLE LIKE concat('%', #{title}, '%') AND URL LIKE concat('%', #{siteName}, '%'))
+        </foreach>
+        ORDER BY TIME DESC LIMIT #{pgno}, #{npp}
+    </select>
 
-    <select id="getListAll" parameterType="map" resultType="HotDealDto">SELECT * FROM hotdeal_info
-        ORDER BY TIME DESC limit #{pgno}, #{npp}</select>
+    <select id="getListAll" parameterType="map" resultType="HotDealDto">
+        SELECT * FROM hotdeal_info ORDER BY TIME DESC limit #{pgno}, #{npp}
+    </select>
 
-    <select id="getTop3Like" resultType="HotDealDto">SELECT * FROM hotdeal_info ORDER BY LIKE_CNT
-        DESC LIMIT 3</select>
+    <select id="getTop3Like" resultType="HotDealDto">
+        SELECT * FROM hotdeal_info ORDER BY LIKE_CNT DESC LIMIT 3
+    </select>
 </mapper>

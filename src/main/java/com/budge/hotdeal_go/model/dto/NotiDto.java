@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class NotiDto {
-    private String token;
+    private String fcmToken;
     private String content;
 }
