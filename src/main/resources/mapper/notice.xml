@@ -11,13 +11,17 @@
 		</if>
 	</sql>
 
-	<select id="getNoticeList" parameterType="map" resultType="NoticeDto">
-		select no, title, content, hit,
-		register_time, member_no
-		from notice
-		where 1=1
+	<select id="getNoticeList" parameterType="map"
+		resultType="noticeDetailDto">
+		select
+		n.no, n.title, n.content, n.hit, n.register_time,
+		n.member_no,
+		m.nickname, m.admin
+		from notice n, member m
+		where
+		n.member_no = m.no
 		<include refid="search"></include>
-		order by no desc
+		order by n.no desc
 		limit #{start}, #{size}
 	</select>
 
@@ -28,5 +32,46 @@
 		where 1=1
 		<include refid="search"></include>
 	</select>
+
+	<insert id="writeNotice" parameterType="noticeDetailDto">
+		insert into notice
+		(title, content, member_no)
+		values
+		(#{content}, #{title}, #{memberNo})
+	</insert>
+
+	<select id="getNoticeDetail" parameterType="int"
+		resultType="noticeDetailDto">
+		select
+		n.no, n.title, n.content, n.hit, n.register_time,
+		n.member_no,
+		m.nickname, m.admin
+		from notice n, member m
+		where
+		n.member_no = m.no
+		and n.no =
+		#{noticeNo}
+	</select>
+
+	<update id="updateHit" parameterType="int">
+		update notice
+		set hit = hit
+		+ 1
+		where no = #{noticeNo}
+	</update>
+
+	<update id="modifyNoticeDetail" parameterType="modifyNoticeDto">
+		update notice
+		set
+		title =
+		#{title}, content = #{content}
+		where no = #{noticeNo}
+	</update>
+
+	<delete id="deleteNoticeDetail" parameterType="int">
+		delete from notice
+		where
+		no = #{noticeNo};
+	</delete>
 
 </mapper>

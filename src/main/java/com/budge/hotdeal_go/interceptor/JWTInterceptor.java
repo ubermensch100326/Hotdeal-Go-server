@@ -67,6 +67,10 @@ public class JWTInterceptor implements HandlerInterceptor {
         System.out.println(requestDetails);
         System.out.println("=======================================================");
 		
+        if ("GET".equals(request.getMethod())) {
+        	return true;
+        }
+        
         // 헤더에 있는 액세스 토큰 정보 확인
 		String authorization = request.getHeader(HEADER_AUTH);
 		if (authorization == null || !authorization.startsWith("Bearer ")) {
@@ -80,10 +84,16 @@ public class JWTInterceptor implements HandlerInterceptor {
 			String provider = memberId.replaceAll("[0-9]", "");
 			MemberDto memberDto = MemberDto.builder().no(no).provider(provider).build();
 			MemberDto memberFind = memberService.findByMemberId(memberDto);
-			
+			request.setAttribute("memberFind", memberFind);
 			if (memberFind != null) {
 				log.info("토큰 사용 가능 : {}", accessToken);
-				return true;
+				if (memberFind.getAdmin() == 1) {
+					log.info("관리자 접속 완료");
+					return true;
+				} else {
+					log.info("권한 없음");
+					throw new UnauthorizedException();
+				}
 			} else {
 				log.info("회원 목록에 사용자 부재 : {}", accessToken);
 				// 404 에러

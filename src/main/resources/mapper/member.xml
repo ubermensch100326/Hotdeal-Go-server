@@ -6,8 +6,8 @@
 	namespace="com.budge.hotdeal_go.model.mapper.MemberMapper">
 
 	<!-- 원래 필요한 정보만 가져오는 것이 맞지만 디버깅용으로 다 가져와봄 -->
-	<select id="findByMemberId" parameterType="MemberDto"
-		resultType="MemberDto">
+	<select id="findByMemberId" parameterType="memberDto"
+		resultType="memberDto">
 		select no, nickname, provider, provider_id, id, password,
 		contact_email, gender, age_range, birthday, register_time,
 		refresh_token, admin
@@ -17,8 +17,8 @@
 		#{no}
 	</select>
 
-	<select id="findByProviderId" parameterType="MemberDto"
-		resultType="MemberDto">
+	<select id="findByProviderId" parameterType="memberDto"
+		resultType="memberDto">
 		select no, nickname, provider, provider_id, id, password,
 		contact_email, gender, age_range, birthday, register_time,
 		refresh_token, admin
@@ -28,7 +28,7 @@
 		#{provider_id}
 	</select>
 
-	<insert id="registerMember" parameterType="MemberDto">
+	<insert id="registerMember" parameterType="memberDto">
 		insert into member
 		(nickname, provider, provider_id, id, password,
 		contact_email,
@@ -56,7 +56,7 @@
 	</update>
 
 	<select id="loginMember" parameterType="map"
-		resultType="MemberDto">
+		resultType="memberDto">
 		select no, nickname, admin,
 		provider, refresh_token
 		from member
@@ -67,7 +67,7 @@
 	</select>
 
 	<select id="checkRefreshToken" parameterType="string"
-		resultType="MemberDto">
+		resultType="memberDto">
 		select no, nickname,
 		provider, refresh_token
 		from member
