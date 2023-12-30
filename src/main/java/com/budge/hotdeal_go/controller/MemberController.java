@@ -1,5 +1,6 @@
 package com.budge.hotdeal_go.controller;
 
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,6 +22,8 @@ import com.budge.hotdeal_go.api.KakaoApi;
 import com.budge.hotdeal_go.exception.InvalidTokenFormatException;
 import com.budge.hotdeal_go.exception.MemberNotFoundException;
 import com.budge.hotdeal_go.exception.TokenExpiredException;
+import com.budge.hotdeal_go.model.dto.DeviceDto;
+import com.budge.hotdeal_go.model.dto.IdCheckDto;
 import com.budge.hotdeal_go.model.dto.LoginDto;
 import com.budge.hotdeal_go.model.dto.MemberDto;
 import com.budge.hotdeal_go.model.dto.MessageDto;
@@ -57,7 +60,7 @@ public class MemberController {
 		this.jwtUtility = jwtUtility;
 	}
 
-	@ApiOperation(value = "웹 소셜로그인 (테스트용) - Deprecated", notes = "카카오 인증 (인가) 코드를 이용하여 회원가입 혹은 로그인 처리", response = TokenDto.class)
+	@ApiOperation(value = "[Deprecated] 웹 소셜로그인 (테스트용)", notes = "카카오 인증 (인가) 코드를 이용하여 회원가입 혹은 로그인 처리", response = TokenDto.class)
 //	REST API로 구현할 때 바로 액세스 토큰을 받는 것이 아니라 인증 코드를 받아서, 인증 코드를 이용하여 액세스 토큰을 받게 됨
 	@GetMapping("/oauth/kakao/test")
 	public ResponseEntity<TokenDto> continueWithKakaoTest(
@@ -88,7 +91,7 @@ public class MemberController {
 		log.info("refresh token : {}", refreshToken);
 		Map<String, Object> saveMap = new HashMap<>();
 		saveMap.put("no", memberFind.getNo());
-		saveMap.put("refresh_token", refreshToken);
+		saveMap.put("refreshToken", refreshToken);
 		memberService.saveRefreshToken(saveMap);
 
 //		JSON으로 token 전달
@@ -114,14 +117,42 @@ public class MemberController {
 //		- 가입되어 있지 않으면 새로 가입시키고 JWT 발급
 //		- 이미 가입되어 있다면 ? 
 
-	@ApiOperation(value = "안드로이드 소셜로그인", notes = "카카오 액세스 토큰을 이용하여 회원가입 혹은 로그인 처리", response = TokenDto.class)
-	@GetMapping("/oauth/kakao")
-	public ResponseEntity<TokenDto> continueWithKakao(HttpServletRequest request) {
+	@ApiOperation(value = "[Header - kakao access] 안드로이드 소셜로그인", notes = "카카오 액세스 토큰을 이용하여 회원가입 혹은 로그인 처리", response = TokenDto.class)
+	@PostMapping("/oauth/kakao")
+	public ResponseEntity<TokenDto> continueWithKakao(@RequestBody @ApiParam(value = "기기 고유 ID") DeviceDto deviceDto, HttpServletRequest request) {
+		// request 형태 살펴보기
+        StringBuilder requestDetails = new StringBuilder();
+        requestDetails.append("Request URL: ").append(request.getRequestURL()).append("\n");
+        requestDetails.append("Request Method: ").append(request.getMethod()).append("\n");
+        requestDetails.append("Request Headers: \n");
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            requestDetails.append(headerName).append(": ").append(request.getHeader(headerName)).append("\n");
+        }
+        requestDetails.append("Request Parameters: \n");
+        request.getParameterMap().forEach((param, values) -> {
+            requestDetails.append(param).append(": ");
+            for (String value : values) {
+                requestDetails.append(value).append(", ");
+            }
+            requestDetails.append("\n");
+        });
+        requestDetails.append("Other Request Information: \n");
+        requestDetails.append("Remote Host: ").append(request.getRemoteHost()).append("\n");
+        requestDetails.append("Content Type: ").append(request.getContentType()).append("\n");
+        requestDetails.append("Character Encoding: ").append(request.getCharacterEncoding()).append("\n");
+        requestDetails.append("Remote Address: ").append(request.getRemoteAddr());
+        System.out.println("======================= Request =======================");
+        System.out.println(requestDetails);
+        System.out.println("=======================================================");
+		
 		String authorization = request.getHeader("Authorization");
 		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
 		}
 		String kakaoAccessToken = authorization.replace("Bearer ", "");
+		
 		
 		log.info("kakao access token : {}", kakaoAccessToken);
 		TokenDto tokenDto = null;
@@ -141,24 +172,38 @@ public class MemberController {
 //			기존에 가입된 고객인데 리프레시 토큰이 만료돼서 다시 카카오 로그인으로 계속하는 경우 기존 member 테이블에 데이터 자체는 남아있음
 //			그렇기 때문에 아예 신규 고객인 경우, 즉 memberFind가 null일 경우에만 회원 등록하는 과정이 있어야 함
 //			이 다음부터는 다시 사이트 자체의 토큰으로 로그인 처리됨 (MemberController)
+			int flag = 0;
 			if (memberFind == null) {
 				memberService.registerMember(memberDto);
 				memberFind = memberDto;
 			}
+			else {
+				flag = 1;
+			}
 
 			String memberId = String.valueOf(memberFind.getNo()) + memberFind.getProvider();
-			String nickname = memberFind.getNickname();
-			int admin = memberFind.getAdmin();
 
 			String accessToken = jwtUtility.createAccessToken(memberId);
 			String refreshToken = jwtUtility.createRefreshToken(memberId);
 			log.info("access token : {}", accessToken);
 			log.info("refresh token : {}", refreshToken);
+
+//			다른 기기에서 로그인 체크
+			if (flag == 1) {
+				Map<String, Object> checkMap = new HashMap<>();
+				checkMap.put("no", memberFind.getNo());
+				checkMap.put("deviceId", deviceDto.getDeviceId());
+				if (memberService.checkRefreshToken(checkMap) == null) flag = 0;
+			}
 			
 //			발급받은 refresh token을 DB에 저장
 			Map<String, Object> saveMap = new HashMap<>();
 			saveMap.put("no", memberFind.getNo());
-			saveMap.put("refresh_token", refreshToken);
+			saveMap.put("refreshToken", refreshToken);
+			saveMap.put("deviceId", deviceDto.getDeviceId());
+			saveMap.put("flag", flag);
+			System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+			System.out.println(saveMap);
 			memberService.saveRefreshToken(saveMap);
 
 //			JSON으로 token 전달
@@ -197,10 +242,18 @@ public class MemberController {
 				log.debug("access token : {}", accessToken);
 				log.debug("refresh token : {}", refreshToken);
 
+				int flag = 0;
+				Map<String, Object> checkMap = new HashMap<>();
+				checkMap.put("no", memberLogin.getNo());
+				checkMap.put("deviceId", loginDto.getDeviceId());
+				if (memberService.checkRefreshToken(checkMap) != null) flag = 1;
+				
 //				발급받은 refresh token을 DB에 저장
 				Map<String, Object> saveMap = new HashMap<>();
 				saveMap.put("no", memberLogin.getNo());
-				saveMap.put("refresh_token", refreshToken);
+				saveMap.put("refreshToken", refreshToken);
+				saveMap.put("deviceId", loginDto.getDeviceId());
+				saveMap.put("flag", flag);
 				memberService.saveRefreshToken(saveMap);
 
 //				JSON으로 token 전달
@@ -237,16 +290,13 @@ public class MemberController {
 	@ApiOperation(value = "사이트 자체 회원가입", notes = "회원 정보를 입력하여 회원가입", response = MessageDto.class)
 	@PostMapping("/register")
 	public ResponseEntity<MessageDto> registerMember(
-			@RequestBody @ApiParam(value = "회원 정보 (nickname, id, password, contact_email, gender(선택), age_range(선택), birthday(선택)", required = true) RegisterDto registerDto) {
+			@RequestBody @ApiParam(value = "회원 정보 (nickname, id, password, contact_email", required = true) RegisterDto registerDto) {
 		log.info("registerMember - {}", registerDto);
 		MemberDto memberDto = MemberDto.builder()
 				.nickname(registerDto.getNickname())
 				.id(registerDto.getId())
 				.password(registerDto.getPassword())
 				.contactEmail(registerDto.getContactEmail())
-				.gender(registerDto.getGender() != "" ? registerDto.getGender() : null)
-				.ageRange(registerDto.getAgeRange() != "" ? registerDto.getAgeRange() : null)
-				.birthday(registerDto.getBirthday() != "" ? registerDto.getBirthday() : null)
 				.provider("hotdealgo")
 				.build();
 		HttpStatus status = HttpStatus.ACCEPTED;
@@ -266,9 +316,9 @@ public class MemberController {
 	}
 
 	// @RequestHeader 어떻게 쓰는지 모르겠음 (우선은 HttpServletReqeust 사용)
-	@ApiOperation(value = "액세스 토큰 재발급", notes = "리프레시 토큰을 이용하여 액세스 토큰 재발급", response = TokenDto.class)
-	@GetMapping("/token")
-	public ResponseEntity<TokenDto> reissueAccessToken(HttpServletRequest request) {
+	@ApiOperation(value = "[Header - refresh] 액세스 토큰 재발급", notes = "리프레시 토큰을 이용하여 액세스 토큰 재발급", response = TokenDto.class)
+	@PostMapping("/token")
+	public ResponseEntity<TokenDto> reissueAccessToken(@RequestBody @ApiParam(value = "기기 고유 ID") DeviceDto deviceDto, HttpServletRequest request) {
 		String authorization = request.getHeader("Authorization");
 		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
@@ -281,11 +331,17 @@ public class MemberController {
 		TokenDto tokenDto = null;
 		
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
+			String memberId = jwtUtility.getMemberId(refreshToken);
+			int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
+			String provider = memberId.replaceAll("[0-9]", "");
+			Map<String, Object> checkMap = new HashMap<>();
+			checkMap.put("deviceId", deviceDto.getDeviceId());
+			checkMap.put("no", no);
+			
 //			액세스 토큰 재발급은 로그인에서와 달리 memberId로 회원을 식별하지 않고 refreshToken 자체로 함
-			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
-			if (memberFind != null) {
+			if (refreshToken.equals(memberService.checkRefreshToken(checkMap))) {
 				String accessToken = jwtUtility
-						.createAccessToken(String.valueOf(memberFind.getNo()) + memberFind.getProvider());
+						.createAccessToken(String.valueOf(no) + provider);
 				tokenDto = TokenDto.builder()
 						.message("액세스 토큰 재발급 완료")
 						.accessToken(accessToken)
@@ -293,7 +349,7 @@ public class MemberController {
 						.build();
 				status = HttpStatus.CREATED;
 			} else {
-				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
+				log.info("존재하지 않는 리프레시 토큰 : {}", refreshToken);
 				// 404 에러
 				throw new MemberNotFoundException();
 			}
@@ -310,9 +366,9 @@ public class MemberController {
 		return new ResponseEntity<TokenDto>(tokenDto, status);
 	}
 
-	@ApiOperation(value = "로그아웃", notes = "DB에서 리프레시 토큰 삭제 (클라이언트 측에서는 액세스 토큰과 리프레시 토큰 삭제)", response = MessageDto.class)
+	@ApiOperation(value = "[Header - refresh] 로그아웃", notes = "DB에서 리프레시 토큰 삭제 (클라이언트 측에서는 액세스 토큰과 리프레시 토큰 삭제)", response = MessageDto.class)
 	@PostMapping("/logout")
-	public ResponseEntity<MessageDto> logoutMember(HttpServletRequest request) {
+	public ResponseEntity<MessageDto> logoutMember(@RequestBody @ApiParam(value = "기기 고유 ID") DeviceDto deviceDto, HttpServletRequest request) {
 		String authorization = request.getHeader("Authorization");
 		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
@@ -325,15 +381,20 @@ public class MemberController {
 //		로그아웃이나 회원가입할 때 리프레시 토큰을 이용하는지 액세스 토큰을 이용하는지 알아볼 것
 //		다중 기기에서 로그인할 경우 토큰 테이블이 별도로 필요할 것으로 보임
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
-			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
-			if (memberFind != null) {
-				memberService.logoutMember(refreshToken);
+			String memberId = jwtUtility.getMemberId(refreshToken);
+			int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
+			Map<String, Object> checkMap = new HashMap<>();
+			checkMap.put("deviceId", deviceDto.getDeviceId());
+			checkMap.put("no", no);
+			
+			if (refreshToken.equals(memberService.checkRefreshToken(checkMap))) {
+				memberService.logoutMember(checkMap);
 				messageDto = MessageDto.builder()
 						.message("로그아웃 완료")
 						.build();
 				status = HttpStatus.OK;
 			} else {
-				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
+				log.info("존재하지 않는 리프레시 토큰 : {}", refreshToken);
 				// 404 에러
 				throw new MemberNotFoundException();
 			}
@@ -351,9 +412,9 @@ public class MemberController {
 	}
 
 //	중복된 코드 제거하도록 인터셉터 활용할 것
-	@ApiOperation(value = "회원탈퇴", notes = "DB에서 회원 정보 삭제", response = MessageDto.class)
+	@ApiOperation(value = "[Header - refresh] 회원탈퇴", notes = "DB에서 회원 정보 삭제", response = MessageDto.class)
 	@DeleteMapping("/withdraw")
-	public ResponseEntity<MessageDto> withdrawMember(HttpServletRequest request) {
+	public ResponseEntity<MessageDto> withdrawMember(@RequestBody @ApiParam(value = "기기 고유 ID") DeviceDto deviceDto, HttpServletRequest request) {
 		String authorization = request.getHeader("Authorization");
 		if (authorization == null || !authorization.startsWith("Bearer ")) {
 			throw new InvalidTokenFormatException();
@@ -365,16 +426,22 @@ public class MemberController {
 		
 //		checkToken 값이 2일 때만 (만료되지 않은 토큰) DB에서 삭제하도록 함
 		if ((flag = jwtUtility.checkToken(refreshToken, "refresh-token")) == 2) {
+			String memberId = jwtUtility.getMemberId(refreshToken);
+			int no = Integer.parseInt(memberId.replaceAll("[^0-9]", ""));
+			Map<String, Object> checkMap = new HashMap<>();
+			checkMap.put("deviceId", deviceDto.getDeviceId());
+			checkMap.put("no", no);
+			
 //			여기서 이중으로 DB 왔다갔다하지 않아도 되게 수정할 것
-			MemberDto memberFind = memberService.checkRefreshToken(refreshToken);
-			if (memberFind != null) {
-				memberService.withdrawMember(refreshToken);
+			if (refreshToken.equals(memberService.checkRefreshToken(checkMap))) {
+				memberService.deleteToken(no);
+				memberService.withdrawMember(no);
 				messageDto = MessageDto.builder()
 						.message("회원탈퇴 완료")
 						.build();
 				status = HttpStatus.OK;
 			} else {
-				log.info("회원 목록에 사용자 부재 : {}", refreshToken);
+				log.info("존재하지 않는 리프레시 토큰 : {}", refreshToken);
 				// 404 에러
 				throw new MemberNotFoundException();
 			}
@@ -391,7 +458,7 @@ public class MemberController {
 		return new ResponseEntity<MessageDto>(messageDto, status);
 	}
 	
-	@ApiOperation(value = "회원정보", notes = "DB에서 회원 정보 꺼내 반환", response = MemberDto.class)
+	@ApiOperation(value = "[Header - access] 회원정보", notes = "DB에서 회원 정보 꺼내 반환", response = MemberDto.class)
 	@GetMapping("/info")
 	public ResponseEntity<MemberDto> getMemberInfo(HttpServletRequest request) {
 		String authorization = request.getHeader("Authorization");
@@ -416,7 +483,7 @@ public class MemberController {
 			if (memberFind != null) {
 				log.info("토큰 사용 가능 : {}", accessToken);
 			} else {
-				log.info("회원 목록에 사용자 부재 : {}", accessToken);
+				log.info("존재하지 않는 리프레시 토큰 : {}", accessToken);
 				// 404 에러
 				throw new MemberNotFoundException();
 			}
@@ -432,5 +499,23 @@ public class MemberController {
 
 		return new ResponseEntity<MemberDto>(memberFind, status);
 	}
+	
+	@ApiOperation(value = "중복 아이디 확인", notes = "DB에서 중복된 아이디가 존재하는지 확인", response = IdCheckDto.class)
+	@GetMapping("/check")
+	public ResponseEntity<IdCheckDto> checkId(@RequestParam @ApiParam(value = "체크할 아이디") String id) {
+		boolean idCheck = false;
+		String message = "사용 불가능";
+		
+		if (memberService.checkId(id) == null) {
+			idCheck = true;
+			message = "사용 가능";
+		}
+		
+		IdCheckDto idCheckDto = IdCheckDto.builder()
+				.idCheck(idCheck)
+				.message(message)
+				.build();
 
+		return new ResponseEntity<IdCheckDto>(idCheckDto, HttpStatus.ACCEPTED);
+	}
 }

@@ -46,6 +46,7 @@ public class KakaoApi {
 			// 추후에 바꾸면서 kakao에 있는 프로젝트 삭제할 것
 			sb.append("&client_id=").append("ced03e3cc4043337974fa444e118cbb5");
 			sb.append("&redirect_uri=").append("http://13.125.124.61/member/oauth/kakao/test");
+//			sb.append("&redirect_uri=").append("http://localhost/member/oauth/kakao/test");
 			sb.append("&code=").append(code);
 
 			bw.write(sb.toString());
@@ -130,9 +131,6 @@ public class KakaoApi {
 				    .provider("kakao")
 				    .providerId(id)
 				    .contactEmail(kakaoAccount.getAsJsonObject().get("email").getAsString())
-				    .gender(kakaoAccount.getAsJsonObject().has("gender") ? kakaoAccount.getAsJsonObject().get("gender").getAsString() : null)
-				    .ageRange(kakaoAccount.getAsJsonObject().has("age_range") ? kakaoAccount.getAsJsonObject().get("age_range").getAsString() : null)
-				    .birthday(kakaoAccount.getAsJsonObject().has("birthday") ? kakaoAccount.getAsJsonObject().get("birthday").getAsString() : null)
 				    .build();
 
 //	        userInfo.put("provider", )

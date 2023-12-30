@@ -25,10 +25,4 @@ public class RegisterDto {
 	private String password;
 	@ApiModelProperty(value = "연락 이메일")
 	private String contactEmail;
-	@ApiModelProperty(value = "성별 (예: female)")
-	private String gender;
-	@ApiModelProperty(value = "나이대 (예: 20~29)")
-	private String ageRange;
-	@ApiModelProperty(value = "생일 (예: 0125)")
-	private String birthday;
 }

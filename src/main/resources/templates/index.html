@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+</head>
+<body>
+    <h1>크롤링 결과</h1>
+    <button id="showButton">버튼</button>
+    <p id="result" style="display: none;" th:text="${text}"></p>
+	<br/>
+	<button id="showButton2">버튼</button>
+    <p id="result2" style="display: none;" th:text="${text2}"></p>
+    <script>
+        var crawledData = document.getElementById('result');
+        var showButton = document.getElementById('showButton');
+        
+        showButton.addEventListener('click', function() {
+            if (crawledData.style.display === 'none') {
+                crawledData.style.display = 'block';
+            } else {
+                crawledData.style.display = 'none';
+            }
+        });
+        
+        var crawledData2 = document.getElementById('result2');
+        var showButton2 = document.getElementById('showButton2');
+        
+        showButton2.addEventListener('click', function() {
+            if (crawledData2.style.display === 'none') {
+                crawledData2.style.display = 'block';
+            } else {
+                crawledData2.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,5 +1,7 @@
 package com.budge.hotdeal_go.model.dto;
 
+import java.util.List;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
@@ -11,10 +13,8 @@ import lombok.ToString;
 @Setter
 @NoArgsConstructor
 @ToString
-@ApiModel(value = "WriteDto : 작성할 공지사항 정보", description = "title, content를 받아서 DB에 저장한다")
-public class WriteDto {
-	@ApiModelProperty(value = "글제목")
-	private String title;
-	@ApiModelProperty(value = "글내용")
-	private String content;
+@ApiModel(value = "DeviceDto : 기기 정보", description = "기기 고유 ID를 나타낸다.")
+public class DeviceDto {
+	@ApiModelProperty(value = "기기 고유 ID")
+	private String deviceId;
 }

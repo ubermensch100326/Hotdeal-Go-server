@@ -46,18 +46,28 @@ public class MemberServiceImpl implements MemberService {
 	}
 
 	@Override
-	public MemberDto checkRefreshToken(String refreshToken) {
-		return memberMapper.checkRefreshToken(refreshToken);
+	public String checkRefreshToken(Map<String, Object> checkMap) {
+		return memberMapper.checkRefreshToken(checkMap);
 	}
 
 	@Override
-	public void logoutMember(String refreshToken) {
-		memberMapper.logoutMember(refreshToken);
+	public void logoutMember(Map<String, Object> checkMap) {
+		memberMapper.logoutMember(checkMap);
 	}
 
 	@Override
-	public void withdrawMember(String refreshToken) {
-		memberMapper.withdrawMember(refreshToken);
+	public void withdrawMember(int no) {
+		memberMapper.withdrawMember(no);
+	}
+
+	@Override
+	public void deleteToken(int no) {
+		memberMapper.deleteToken(no);
+	}
+
+	@Override
+	public MemberDto checkId(String id) {
+		return memberMapper.checkId(id);
 	}
 
 }

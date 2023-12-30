@@ -23,26 +23,18 @@ public class MemberDto {
 	private int no;
 	@ApiModelProperty(value = "회원 닉네임")
 	private String nickname;
-	@ApiModelProperty(value = "소셜 로그인 제공자")
-	private String provider;
-	@ApiModelProperty(value = "소셜 로그인 식별자")
-	private String providerId;
 	@ApiModelProperty(value = "아이디 (사이트 자체적인 회원가입)")
 	private String id;
 	@ApiModelProperty(value = "비밀번호 (사이트 자체적인 회원가입)")
 	private String password;
+	@ApiModelProperty(value = "소셜 로그인 제공자")
+	private String provider;
+	@ApiModelProperty(value = "소셜 로그인 식별자")
+	private String providerId;
 	@ApiModelProperty(value = "연락 이메일")
 	private String contactEmail;
-	@ApiModelProperty(value = "성별 (예: female)")
-	private String gender;
-	@ApiModelProperty(value = "나이대 (예: 20~29)")
-	private String ageRange;
-	@ApiModelProperty(value = "생일 (예: 0125)")
-	private String birthday;
 	@ApiModelProperty(value = "회원가입 시간")
 	private String registerTime;
-	@ApiModelProperty(value = "리프레시 토큰")
-	private String refreshToken;
 	@ApiModelProperty(value = "관리자 여부 (0/1)")
 	private int admin;
 }

@@ -8,82 +8,104 @@
 	<!-- 원래 필요한 정보만 가져오는 것이 맞지만 디버깅용으로 다 가져와봄 -->
 	<select id="findByMemberId" parameterType="memberDto"
 		resultType="memberDto">
-		select no, nickname, provider, provider_id, id, password,
-		contact_email, gender, age_range, birthday, register_time,
-		refresh_token, admin
+		select no, nickname, id, password, provider, provider_id,
+		contact_email, register_time, admin
 		from member
-		where provider = #{provider}
-		and no =
-		#{no}
+		where
+		provider =
+		#{provider}
+		and no = #{no}
 	</select>
 
 	<select id="findByProviderId" parameterType="memberDto"
 		resultType="memberDto">
-		select no, nickname, provider, provider_id, id, password,
-		contact_email, gender, age_range, birthday, register_time,
-		refresh_token, admin
+		select no, nickname, id, password, provider, provider_id,
+		contact_email, register_time, admin
 		from member
-		where provider = #{provider}
-		and provider_id =
-		#{provider_id}
+		where provider =
+		#{provider}
+		and
+		provider_id =
+		#{providerId}
 	</select>
 
 	<insert id="registerMember" parameterType="memberDto">
 		insert into member
 		(nickname, provider, provider_id, id, password,
-		contact_email,
-		gender,
-		age_range,
-		birthday)
+		contact_email)
 		values (#{nickname},
 		#{provider},
-		#{provider_id},
+		#{providerId},
 		#{id},
 		#{password},
-		#{contact_email},
-		#{gender}, #{age_range}, #{birthday})
+		#{contactEmail})
 		<selectKey resultType="int" keyProperty="no" order="AFTER">
 			select
 			last_insert_id()
 		</selectKey>
 	</insert>
 
-	<update id="saveRefreshToken" parameterType="map">
-		update member
-		set
-		refresh_token = #{refresh_token}
-		where no = #{no}
-	</update>
-
 	<select id="loginMember" parameterType="map"
 		resultType="memberDto">
-		select no, nickname, admin,
-		provider, refresh_token
-		from member
+		select no, nickname, admin, provider
+		from
+		member
 		where id =
 		#{id}
 		and password =
 		#{password}
 	</select>
 
-	<select id="checkRefreshToken" parameterType="string"
-		resultType="memberDto">
-		select no, nickname,
-		provider, refresh_token
-		from member
-		where refresh_token = #{refreshToken}
-	</select>
-
-	<update id="logoutMember" parameterType="string">
-		update member
+	<update id="logoutMember" parameterType="map">
+		update token
 		set
-		refresh_token = NULL
-		where refresh_token = #{refreshToken}
+		refresh_token = null
+		where member_no = #{no}
+		and device_id = #{deviceId}
 	</update>
 
-	<delete id="withdrawMember" parameterType="string">
+	<delete id="withdrawMember" parameterType="int">
 		delete from member
-		where refresh_token = #{refreshToken}
+		where no = #{no}
 	</delete>
+	
+	<delete id="deleteToken" parameterType="int">
+		delete from token
+		where member_no = #{no}
+	</delete>
+
+	<update id="saveRefreshToken" parameterType="map">
+		<choose>
+			<when test="flag == 1">
+				update token
+				set
+				refresh_token = #{refreshToken}
+				where
+				member_no = #{no}
+				and device_id = #{deviceId}
+			</when>
+			<otherwise>
+				insert into token
+				(member_no, device_id, refresh_token)
+				values (#{no}, #{deviceId}, #{refreshToken})
+			</otherwise>
+		</choose>
+	</update>
+
+	<select id="checkRefreshToken" parameterType="map"
+		resultType="string">
+		select refresh_token
+		from token
+		where member_no = #{no} 
+		and device_id = #{deviceId}
+	</select>
+
+	<select id="checkId" parameterType="string" resultType="memberDto">
+		select no, nickname, admin, provider
+		from
+		member
+		where id =
+		#{id}
+	</select>
 
 </mapper>

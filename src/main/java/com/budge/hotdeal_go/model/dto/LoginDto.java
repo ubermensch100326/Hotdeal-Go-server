@@ -21,4 +21,6 @@ public class LoginDto {
 	private String id;
 	@ApiModelProperty(value = "비밀번호 (사이트 자체적인 회원가입)")
 	private String password;
+	@ApiModelProperty(value = "기기 고유 ID")
+	private String deviceId;
 }

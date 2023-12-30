@@ -6,7 +6,7 @@
 	namespace="com.budge.hotdeal_go.model.mapper.NoticeMapper">
 
 	<sql id="search">
-		<if test="keyword != null and keyword != ''">
+		<if test="keyword != ''">
 			and title like concat('%', #{keyword}, '%')
 		</if>
 	</sql>
@@ -16,7 +16,7 @@
 		select
 		n.no, n.title, n.content, n.hit, n.register_time,
 		n.member_no,
-		m.nickname, m.admin
+		m.nickname
 		from notice n, member m
 		where
 		n.member_no = m.no
@@ -45,7 +45,7 @@
 		select
 		n.no, n.title, n.content, n.hit, n.register_time,
 		n.member_no,
-		m.nickname, m.admin
+		m.nickname
 		from notice n, member m
 		where
 		n.member_no = m.no

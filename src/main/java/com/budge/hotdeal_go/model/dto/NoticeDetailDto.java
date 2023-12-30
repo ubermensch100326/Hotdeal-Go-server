@@ -31,6 +31,4 @@ public class NoticeDetailDto {
 	private int memberNo;
 	@ApiModelProperty(value = "닉네임")
 	private String nickname;
-	@ApiModelProperty(value = "관리자 여부")
-	private int admin;
 }

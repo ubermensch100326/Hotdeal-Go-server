@@ -72,13 +72,24 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Thymeleaf -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-thymeleaf</artifactId>
+		</dependency>
+
+		<!-- WebClient -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
 		<!-- Firebase -->
 		<dependency>
 			<groupId>com.google.firebase</groupId>
 			<artifactId>firebase-admin</artifactId>
 			<version>9.2.0</version>
 		</dependency>
-
 
 		<!-- MariaDB -->
 		<dependency>
@@ -104,8 +115,7 @@
 			<artifactId>springfox-swagger-ui</artifactId>
 			<version>3.0.0</version>
 		</dependency>
-		<!-- <dependency> <groupId>io.springfox</groupId>
-		<artifactId>springfox-swagger2</artifactId> 
+		<!-- <dependency> <groupId>io.springfox</groupId> <artifactId>springfox-swagger2</artifactId> 
 			<version>3.0.0</version> </dependency> -->
 
 		<!-- tomcat -->

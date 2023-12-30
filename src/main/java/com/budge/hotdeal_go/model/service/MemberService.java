@@ -17,10 +17,13 @@ public interface MemberService {
 
 	MemberDto findByMemberId(MemberDto memberDto);
 
-	MemberDto checkRefreshToken(String refreshToken);
+	String checkRefreshToken(Map<String, Object> checkMap);
 
-	void logoutMember(String refreshToken);
+	void logoutMember(Map<String, Object> checkMap);
 
-	void withdrawMember(String refreshToken);
+	void withdrawMember(int no);
 
+	void deleteToken(int no);
+
+	MemberDto checkId(String id);
 }

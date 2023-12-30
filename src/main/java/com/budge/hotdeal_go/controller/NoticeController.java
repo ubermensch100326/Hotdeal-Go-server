@@ -77,10 +77,10 @@ public class NoticeController {
 		}
 	}
 
-	@ApiOperation(value = "공지사항 글작성", notes = "새로운 공지사항 작성", response = MessageDto.class)
+	@ApiOperation(value = "[Header - access] 공지사항 글작성", notes = "새로운 공지사항 작성", response = MessageDto.class)
 	@PostMapping
 	public ResponseEntity<MessageDto> writeNotice(
-			@RequestBody @ApiParam(value = "게시글 정보.", required = true) WriteDto writeDto, HttpServletRequest request) {
+			@RequestBody @ApiParam(value = "게시글 정보", required = true) WriteDto writeDto, HttpServletRequest request) {
 		log.info("writeBoard writeDto - {}", writeDto);
 		MemberDto memberDto = (MemberDto) request.getAttribute("memberFind");
 		NoticeDetailDto noticeDetailDto = NoticeDetailDto.builder()
@@ -111,14 +111,14 @@ public class NoticeController {
 	
 //	인터셉터 어떻게 적용할지 고민할 것
 //	일단은 프론트 쪽에서 수정 버튼이 안 보일 거라서 상관없을 듯
-	@ApiOperation(value = "공지사항 수정글 얻기", notes = "글번호에 해당하는 수정할 공지사항의 세부내용 반환", response = NoticeDetailDto.class)
+	@ApiOperation(value = "[Header - access] 공지사항 수정글 얻기", notes = "글번호에 해당하는 수정할 공지사항의 세부내용 반환", response = NoticeDetailDto.class)
 	@GetMapping("/modify/{noticeno}")
 	public ResponseEntity<NoticeDetailDto> getModifyNoticeDetail(@PathVariable("noticeno") @ApiParam(value = "얻어올 공지사항의 글번호", required = true) int noticeno) {
 		log.info("getModifyNoticeDetail - 호출 - {}" + noticeno);
 		return new ResponseEntity<NoticeDetailDto>(noticeService.getNoticeDetail(noticeno), HttpStatus.OK);
 	}
 	
-	@ApiOperation(value = "공지사항 수정", notes = "수정할 공지사항 정보를 입력한 뒤 수정 클릭", response = MessageDto.class)
+	@ApiOperation(value = "[Header - access] 공지사항 수정", notes = "수정할 공지사항 정보를 입력한 뒤 수정 클릭", response = MessageDto.class)
 	@PutMapping
 	public ResponseEntity<MessageDto> modifyNoticeDetail(@RequestBody @ApiParam(value = "수정할 공지사항 정보", required = true) ModifyNoticeDto modifyNoticeDto) {
 		log.info("modifyNoticeDetail 호출 - {}", modifyNoticeDto);
@@ -135,7 +135,7 @@ public class NoticeController {
 	}
 	
 //	삭제할 때 유저정보 삭제해야되는지 알아볼 것
-	@ApiOperation(value = "공지사항 삭제", notes = "글번호에 해당하는 공지사항 삭제", response = MessageDto.class)
+	@ApiOperation(value = "[Header - access] 공지사항 삭제", notes = "글번호에 해당하는 공지사항 삭제", response = MessageDto.class)
 	@DeleteMapping("/{noticeno}")
 	public ResponseEntity<MessageDto> deleteNoticeDetail(@PathVariable("noticeno") @ApiParam(value = "삭제할 공지사항의 글번호", required = true) int noticeno) {
 		log.info("deleteNoticeDetail 호출 - {}", noticeno);

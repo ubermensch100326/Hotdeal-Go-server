@@ -15,7 +15,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ApiModel(value = "TokenDto : 토큰 정보", description = "액세스 토큰과 리프레시 토큰을 나타낸다.")
+@ApiModel(value = "TokenDto : 토큰 정보", description = "액세스 토큰과 리프레시 토큰을 나타냄")
 public class TokenDto {
 	@ApiModelProperty(value = "액세스 토큰")
 	private String accessToken;
