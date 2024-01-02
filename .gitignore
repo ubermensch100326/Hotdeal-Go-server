@@ -5,7 +5,7 @@ target/
 !**/src/test/**/target/
 
 ### pem
-.pem
+*.pem
 
 ### STS ###
 .apt_generated
