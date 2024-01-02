@@ -47,6 +47,10 @@ public class HotdealGoBackendApplication {
 	public static void main(String[] args) throws IOException {
 		SpringApplication.run(HotdealGoBackendApplication.class, args);
 
+		startThread();
+	}
+
+	private static void startThread() {
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
 		// 크롤링 작업을 수행하는 Runnable (쓰레드 추가)
@@ -72,8 +76,6 @@ public class HotdealGoBackendApplication {
 		List<HotDealDto> fmKorea = getFmKorea();
 		List<HotDealDto> quasarZone = getQuasarZone();
 		List<HotDealDto> ruliweb = getRuliweb();
-
-		
 
 		if (fmKorea.size() == 0) {
 			System.out.println("[쓰레드] 에펨코리아에서 크롤링하지 못하였습니다.");
@@ -114,10 +116,10 @@ public class HotdealGoBackendApplication {
 
 		// 먼저, 등록된 키워드 리스트들을 조회
 		keywordList = fcmService.getKeywordAll();
-		
+
 		// 키워드와 사용자 ID 목록을 매핑하는 Map을 생성 --> 효율성 개선 (1)
-		Map<String, List<String>> keywordToUserIdsMap = new HashMap<>();	
-		
+		Map<String, List<String>> keywordToUserIdsMap = new HashMap<>();
+
 		// keywordList를 순회하여 Map에 삽입
 		for (KeywordDto kDto : keywordList) {
 			String keyword = kDto.getKeywordName().trim().toLowerCase();
@@ -126,7 +128,7 @@ public class HotdealGoBackendApplication {
 			// Map에 사용자 ID 추가
 			keywordToUserIdsMap.computeIfAbsent(keyword, k -> new ArrayList<>()).add(userId);
 		}
-		
+
 		// 10분마다 가져온 데이터(제목)들을 모두 키워드와 일치하는지 비교 시작
 		for (String title : tmpList) {
 			for (Entry<String, List<String>> entry : keywordToUserIdsMap.entrySet()) {
@@ -134,7 +136,7 @@ public class HotdealGoBackendApplication {
 				// 만약 포함되어 있다면, 사용자 ID를 확인하여 알림 전송
 				if (title.toLowerCase().contains(entry.getKey())) {
 					List<String> userIds = entry.getValue();
-					
+
 					for (String userId : userIds) {
 						System.out.println(title);
 						System.out.println(userId);
@@ -244,9 +246,9 @@ public class HotdealGoBackendApplication {
 				Pattern p = Pattern.compile(pattern);
 				Matcher m = p.matcher(title.text());
 				dto.setTitle(m.replaceAll("").trim());
-				try{
+				try {
 					tmpList.add(m.replaceAll("").trim());
-				}catch(Exception e){
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 
