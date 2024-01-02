@@ -1,8 +1,11 @@
 package com.budge.hotdeal_go.controller;
 
+import java.io.IOException;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.List;
 
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.budge.hotdeal_go.model.dto.KeywordDto;
 import com.budge.hotdeal_go.model.service.FCMService;
 import com.budge.hotdeal_go.model.service.FirebaseService;
+import com.google.auth.oauth2.GoogleCredentials;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -33,7 +37,7 @@ public class FCMController {
     @PostMapping("/sendNotification")
     public void doPostNoti(
             @RequestParam(required = true) @ApiParam(value = "보낼 사용자 ID") String userId,
-            @RequestParam(required = true) @ApiParam(value = "보낼 사용자 ID") String content) throws SQLException {
+            @RequestParam(required = true) @ApiParam(value = "보낼 내용") String content) throws SQLException {
 
         String fcmToken = fcmService.getFcmToken(userId);
         String response = firebaseService.sendNotification(content, fcmToken);
@@ -68,10 +72,10 @@ public class FCMController {
         }
     }
 
-    @ApiOperation(value = "키워드 목록 조회", notes = "사용자 ID 기준으로 등록된 알림 목록을 가져온다.")
+    @ApiOperation(value = "키워드 목록 조회", notes = "사용자 ID 기준으로 등록된 키워드 목록을 가져온다.")
     @GetMapping("/Keyword")
     public ResponseEntity<List<KeywordDto>> doGetKeyword(
-            @RequestParam(required = true) @ApiParam(value = "등록할 사용자 ID") String userId) throws SQLException {
+            @RequestParam(required = true) @ApiParam(value = "가져올 사용자 ID") String userId) throws SQLException {
         List<KeywordDto> list = fcmService.getKeywordByUserId(userId);
 
         if (list.size() == 0) {
@@ -98,8 +102,8 @@ public class FCMController {
     @ApiOperation(value = "키워드 알림 삭제", notes = "사용자 ID와 키워드 이름이 일치한 값을 삭제한다.")
     @DeleteMapping("/keyword")
     public ResponseEntity<String> doRemoveKeyword(
-            @RequestParam(required = true) @ApiParam(value = "등록할 사용자 ID") String userId,
-            @RequestParam(required = true) @ApiParam(value = "등록할 키워드 이름") String keywordName) {
+            @RequestParam(required = true) @ApiParam(value = "삭제할 사용자 ID") String userId,
+            @RequestParam(required = true) @ApiParam(value = "삭제할 키워드 이름") String keywordName) {
 
         try {
             fcmService.removeKeyword(userId, keywordName);

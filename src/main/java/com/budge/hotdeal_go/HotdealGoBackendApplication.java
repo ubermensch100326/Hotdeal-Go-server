@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -31,7 +34,7 @@ public class HotdealGoBackendApplication {
 
 	private static FCMService fcmService;
 
-	private static List<HotDealDto> tmpList;
+	private static List<String> tmpList;
 	private static List<KeywordDto> keywordList;
 
 	@Autowired
@@ -41,7 +44,7 @@ public class HotdealGoBackendApplication {
 		HotdealGoBackendApplication.fcmService = fcmService;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		SpringApplication.run(HotdealGoBackendApplication.class, args);
 
 		ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
@@ -59,15 +62,18 @@ public class HotdealGoBackendApplication {
 
 		// 스케줄링: 주기 10분
 		// (서버 시작시 1분 지연 후 10분마다 카운팅하여 스스로 최신화)
-		// scheduler.scheduleAtFixedRate(crawlingTask, 0, 15, TimeUnit.MINUTES);
+		scheduler.scheduleAtFixedRate(crawlingTask, 0, 15, TimeUnit.MINUTES);
 	}
 
 	private static void crawlAndSaveData() throws SQLException {
 		System.out.println("[쓰레드] 설정한 3개의 커뮤니티를 크롤링합니다.");
 
+		tmpList = new ArrayList<>();
 		List<HotDealDto> fmKorea = getFmKorea();
 		List<HotDealDto> quasarZone = getQuasarZone();
 		List<HotDealDto> ruliweb = getRuliweb();
+
+		
 
 		if (fmKorea.size() == 0) {
 			System.out.println("[쓰레드] 에펨코리아에서 크롤링하지 못하였습니다.");
@@ -90,7 +96,7 @@ public class HotdealGoBackendApplication {
 			else
 				System.out.println("퀘이사존 실패");
 		}
-		// System.out.println(ruliweb);
+
 		if (ruliweb.size() == 0) {
 			System.out.println("[쓰레드] 루리웹에서 크롤링하지 못하였습니다.");
 		} else {
@@ -101,86 +107,104 @@ public class HotdealGoBackendApplication {
 			else
 				System.out.println("루리웹 실패");
 		}
-
-		tmpList = new ArrayList<>();
-		tmpList.addAll(fmKorea);
-		tmpList.addAll(quasarZone);
-		tmpList.addAll(ruliweb);
 	}
 
+	// 알림을 보낼지 안 보낼지 결정하는 메서드
 	private static void checkNotiService() throws SQLException {
+
+		// 먼저, 등록된 키워드 리스트들을 조회
 		keywordList = fcmService.getKeywordAll();
 		
-		for (HotDealDto HDto : tmpList) {
-			String text = HDto.getTitle();
-			
-			for (KeywordDto kDto : keywordList) {
-				
+		// 키워드와 사용자 ID 목록을 매핑하는 Map을 생성 --> 효율성 개선 (1)
+		Map<String, List<String>> keywordToUserIdsMap = new HashMap<>();	
+		
+		// keywordList를 순회하여 Map에 삽입
+		for (KeywordDto kDto : keywordList) {
+			String keyword = kDto.getKeywordName().trim().toLowerCase();
+			String userId = kDto.getUserId();
+
+			// Map에 사용자 ID 추가
+			keywordToUserIdsMap.computeIfAbsent(keyword, k -> new ArrayList<>()).add(userId);
+		}
+		
+		// 10분마다 가져온 데이터(제목)들을 모두 키워드와 일치하는지 비교 시작
+		for (String title : tmpList) {
+			for (Entry<String, List<String>> entry : keywordToUserIdsMap.entrySet()) {
+
+				// 만약 포함되어 있다면, 사용자 ID를 확인하여 알림 전송
+				if (title.toLowerCase().contains(entry.getKey())) {
+					List<String> userIds = entry.getValue();
+					
+					for (String userId : userIds) {
+						System.out.println(title);
+						System.out.println(userId);
+					}
+				}
 			}
 		}
 	}
-	
+
 	// KMP (1)
 	public static boolean isSubstring(String pattern, String text) {
-        // 공백을 제거하고 비교
-        String patternWithoutSpaces = pattern.replaceAll("\\s", "");
-        String textWithoutSpaces = text.replaceAll("\\s", "");
+		// 공백을 제거하고 비교
+		String patternWithoutSpaces = pattern.replaceAll("\\s", "");
+		String textWithoutSpaces = text.replaceAll("\\s", "");
 
-        int m = patternWithoutSpaces.length();
-        int n = textWithoutSpaces.length();
+		int m = patternWithoutSpaces.length();
+		int n = textWithoutSpaces.length();
 
-        int[] lps = computeLPSArray(patternWithoutSpaces);
+		int[] lps = computeLPSArray(patternWithoutSpaces);
 
-        int i = 0;
-        int j = 0;
+		int i = 0;
+		int j = 0;
 
-        while (i < n) {
-            if (patternWithoutSpaces.charAt(j) == textWithoutSpaces.charAt(i)) {
-                j++;
-                i++;
-            }
+		while (i < n) {
+			if (patternWithoutSpaces.charAt(j) == textWithoutSpaces.charAt(i)) {
+				j++;
+				i++;
+			}
 
 			// 패턴이 존재하면
-            if (j == m) {
-                return true;
-            } else if (i < n && patternWithoutSpaces.charAt(j) != textWithoutSpaces.charAt(i)) {
-                if (j != 0) {
-                    j = lps[j - 1];
-                } else {
-                    i++;
-                }
-            }
-        }
+			if (j == m) {
+				return true;
+			} else if (i < n && patternWithoutSpaces.charAt(j) != textWithoutSpaces.charAt(i)) {
+				if (j != 0) {
+					j = lps[j - 1];
+				} else {
+					i++;
+				}
+			}
+		}
 
 		// 패턴이 존재하지 않으면
-        return false;
-    }
+		return false;
+	}
 
 	// KMP (2)
-    private static int[] computeLPSArray(String pattern) {
-        int m = pattern.length();
-        int[] lps = new int[m];
-        int len = 0;
-        int i = 1;
+	private static int[] computeLPSArray(String pattern) {
+		int m = pattern.length();
+		int[] lps = new int[m];
+		int len = 0;
+		int i = 1;
 
-        while (i < m) {
-            if (pattern.charAt(i) == pattern.charAt(len)) {
-                len++;
-                lps[i] = len;
-                i++;
-            } else {
-                if (len != 0) {
-                    len = lps[len - 1];
-                } else {
-                    lps[i] = 0;
-                    i++;
-                }
-            }
-        }
+		while (i < m) {
+			if (pattern.charAt(i) == pattern.charAt(len)) {
+				len++;
+				lps[i] = len;
+				i++;
+			} else {
+				if (len != 0) {
+					len = lps[len - 1];
+				} else {
+					lps[i] = 0;
+					i++;
+				}
+			}
+		}
 
-        return lps;
-    }
-	
+		return lps;
+	}
+
 	public static List<HotDealDto> getFmKorea() {
 		List<HotDealDto> list = new ArrayList<>();
 
@@ -220,6 +244,11 @@ public class HotdealGoBackendApplication {
 				Pattern p = Pattern.compile(pattern);
 				Matcher m = p.matcher(title.text());
 				dto.setTitle(m.replaceAll("").trim());
+				try{
+					tmpList.add(m.replaceAll("").trim());
+				}catch(Exception e){
+					e.printStackTrace();
+				}
 
 				dto.setPrice(prices.get(i).selectFirst("a").text().replace("원", "").trim());
 				dto.setUrl("https://www.fmkorea.com" + title.attr("href"));
@@ -282,16 +311,17 @@ public class HotdealGoBackendApplication {
 
 				Matcher matcher = pattern.matcher(str);
 				if (matcher.find()) {
-					String title = str.replaceFirst("\\[([^\\]]+)\\]", "").trim();
-					if (title.equals("") || title == null)
-						continue;
-					dto.setTitle(title);
+					// String title = str.replaceFirst("\\[([^\\]]+)\\]", "").trim();
+					// if (title.equals("") || title == null)
+					// continue;
+					// dto.setTitle(title);
 
 					String marketName = matcher.group(1);
 					dto.setPurchasingPlace(marketName.replace("[", "").replace("]", "").trim());
 				}
 
 				dto.setTitle(tr.select("span.ellipsis-with-reply-cnt").text());
+				tmpList.add(new String(tr.select("span.ellipsis-with-reply-cnt").text()));
 
 				String price = tr.select("span.text-orange").text();
 				dto.setPrice(price.replace("￦", "").replace("(KRW)", "").trim());
@@ -357,6 +387,7 @@ public class HotdealGoBackendApplication {
 						continue;
 					}
 					dto.setTitle(title);
+					tmpList.add(new String(title));
 
 					String marketName = matcher.group(1);
 					dto.setPurchasingPlace(marketName.replace("[", "").replace("]", "").trim());
