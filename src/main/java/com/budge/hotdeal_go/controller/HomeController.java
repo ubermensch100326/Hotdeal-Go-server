@@ -38,7 +38,7 @@ public class HomeController {
 		BufferedReader br = null;
 
 		try {
-			URL url = new URL("http://13.125.124.61/hotdeal/info");
+			URL url = new URL("http://3.37.130.219/hotdeal/info");
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setRequestMethod("GET");
 
@@ -55,7 +55,7 @@ public class HomeController {
 			model.addAttribute("text", result);
 
 //			두번째 요청
-			url = new URL("http://13.125.124.61/hotdeal/like/top3");
+			url = new URL("http://3.37.130.219/hotdeal/like/top3");
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setRequestMethod("GET");
 
@@ -94,14 +94,14 @@ public class HomeController {
 
 		try {
 		    stopWatch.start();
-			String result = restTemplate.getForObject("http://13.125.124.61/hotdeal/info", String.class);
+			String result = restTemplate.getForObject("http://3.37.130.219/hotdeal/info", String.class);
 			model.addAttribute("text", result);
 		    stopWatch.stop();
 		    System.out.println(result);
 		    System.out.println(stopWatch.prettyPrint());
 		    
 		    stopWatch.start();
-			String result2 = restTemplate.getForObject("http://13.125.124.61/hotdeal/like/top3", String.class);
+			String result2 = restTemplate.getForObject("http://3.37.130.219/hotdeal/like/top3", String.class);
 			model.addAttribute("text2", result2);
 		    stopWatch.stop();
 		    System.out.println(result2);
@@ -122,7 +122,7 @@ public class HomeController {
 	    StopWatch stopWatch = new StopWatch();
 	    
 	    stopWatch.start();
-	    Mono<String> result1Mono = webClient.get().uri("http://13.125.124.61/hotdeal/info")
+	    Mono<String> result1Mono = webClient.get().uri("http://3.37.130.219/hotdeal/info")
 	            .retrieve()
 	            .bodyToMono(String.class)
 	            .doOnSuccess(result -> System.out.println("Result 1: " + result));
@@ -130,7 +130,7 @@ public class HomeController {
 	    System.out.println(stopWatch.prettyPrint());
 
 	    stopWatch.start();
-	    Mono<String> result2Mono = webClient.get().uri("http://13.125.124.61/hotdeal/like/top3")
+	    Mono<String> result2Mono = webClient.get().uri("http://3.37.130.219/hotdeal/like/top3")
 	            .retrieve()
 	            .bodyToMono(String.class)
 	            .doOnSuccess(result -> System.out.println("Result 2: " + result));
