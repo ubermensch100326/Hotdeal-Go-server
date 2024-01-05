@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.budge.hotdeal_go.model.mapper.FCMMapper">
+    <select id="getFcmToken" parameterType="String" resultType="String">
+        SELECT FCM_TOKEN FROM fcm WHERE USER_ID = #{userId};
+    </select>
+
+    <insert id="registFcmToken" parameterType="map"> 
+        INSERT INTO fcm (USER_ID, FCM_TOKEN) VALUES(#{userId}, #{fcmToken}) 
+    </insert>
+
+    <delete id="removeFcmToken" parameterType="String"> 
+        DELETE FROM fcm WHERE USER_ID = #{userId}; 
+    </delete>
+
+    <select id="getKeywordAll" resultType="KeywordDto">
+        SELECT * FROM keyword;
+    </select>
+
+    <select id="getKeywordByUserId" parameterType="String" resultType="KeywordDto">
+        SELECT * FROM keyword WHERE USER_ID = #{user_id};
+    </select>
+
+    <insert id="registKeyword" parameterType="map">
+        INSERT INTO keyword (USER_ID, KEYWORD_NAME) VALUES(#{userId}, #{keywordName});
+    </insert>
+
+    <delete id="removeKeyword" parameterType="map"> 
+        DELETE FROM keyword WHERE USER_ID = #{userId} AND KEYWORD_NAME = #{keywordName}; 
+    </delete>
+</mapper>
